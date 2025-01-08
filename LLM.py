@@ -1,8 +1,9 @@
+from modelscope import GenerationConfig
+from huggingface_hub import snapshot_download
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
 
 def __init__(self, model_path, adapter_path=None, is_chatglm=False, device="cuda", **kwargs):
-    from huggingface_hub import snapshot_download
-    from transformers import AutoModelForCausalLM, AutoTokenizer
-
     self.model_path = snapshot_download('qwen/Qwen-7B-Chat')  # 下载模型
     self.model = AutoModelForCausalLM.from_pretrained(self.model_path, trust_remote_code=True, device_map="auto")
     self.tokenizer = AutoTokenizer.from_pretrained(self.model_path)

@@ -1,4 +1,4 @@
-from llms.llm import LLM
+from llms.Llama_init import LLM
 
 model: LLM = None
 
@@ -16,6 +16,9 @@ def set_llm(model_name):
     elif model_cat == 'Qwen':
         from llms.LLM_init import Qwen
         model = Qwen(model_name)
+    elif model_cat == 'Allama':
+        from llms.Llama_init import Llama
+        model = Llama(model_name)
     else:
         raise Exception(f'不支持的模型 {model_name}')
 

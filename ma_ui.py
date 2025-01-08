@@ -3,6 +3,7 @@ import gradio as gr
 import handlers
 import config
 from utils.github_search import search_github, download_repo
+from utils.arXiv_search import arxiv_search, is_arxiv_id, translate_text
 from main import register, login, get_user_info
 
 def build_ui(prj_dir):
