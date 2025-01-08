@@ -1,0 +1,7 @@
+.ipynb_checkpoints
+.DS_Store
+.idea
+Untitled.ipynb
+__pycache__
+tmp.txt
+.env
