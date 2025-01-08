@@ -9,7 +9,8 @@ model_list = [
     'Qwen-7B-Chat',
     'Qwen-14B-Chat',
     'Qwen-14B-Chat-Int8',
-    'Qwen-14B-Chat-Int4'
+    'Qwen-14B-Chat-Int4',
+    'Allama-8B'
 ]
 
 def init_config():
