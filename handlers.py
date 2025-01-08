@@ -54,7 +54,7 @@ def bind_event_handlers(demo):
     )
     code_cmt_btn.click(
         gr_funcs.ai_comment,
-        inputs=[demo['code_cmt_btn'], demo['prj_fe'], demo['user_id']],  # Ìí¼Ó user_id
+        inputs=[demo['code_cmt_btn'], demo['prj_fe'], demo['user_id']],  # æ·»åŠ  user_id
         outputs=[demo['code_cmt_btn'], demo['cmt_code']]
     )
     prj_fe.change(
@@ -64,49 +64,49 @@ def bind_event_handlers(demo):
     )
     code_lang_ch_btn.click(
         gr_funcs.change_code_lang,
-        inputs=[demo['code_lang_ch_btn'], demo['raw_lang_code'], demo['to_lang'], demo['user_id']],  # Ìí¼Ó user_id
+        inputs=[demo['code_lang_ch_btn'], demo['raw_lang_code'], demo['to_lang'], demo['user_id']],  # æ·»åŠ  user_id
         outputs=[demo['code_lang_ch_btn'], demo['code_lang_changed_md']]
     )
     search_btn.click(
         gr_funcs.arxiv_search_func,
-        inputs=[demo['search_query'], demo['user_id']],  # Ìí¼Ó user_id
+        inputs=[demo['search_query'], demo['user_id']],  # æ·»åŠ  user_id
         outputs=[demo['search_results'], demo['selected_paper']]
     )
     process_paper_btn.click(
         gr_funcs.process_paper,
-        inputs=[demo['selected_paper'], demo['user_id']],  # Ìí¼Ó user_id
+        inputs=[demo['selected_paper'], demo['user_id']],  # æ·»åŠ  user_id
         outputs=[demo['paper_summary']]
     )
 
-    # GitHub ËÑË÷°´Å¥µã»÷ÊÂ¼ş
+    # GitHub æœç´¢æŒ‰é’®ç‚¹å‡»äº‹ä»¶
     github_search_btn.click(
         fn=gr_funcs.github_search_func,
-        inputs=[demo['github_query'], demo['user_id']],  # Ìí¼Ó user_id
+        inputs=[demo['github_query'], demo['user_id']],  # æ·»åŠ  user_id
         outputs=[demo['github_search_results'], demo['selected_github_repo']]
     )
 
-    # ´¦Àí GitHub ²Ö¿â°´Å¥µã»÷ÊÂ¼ş
+    # å¤„ç† GitHub ä»“åº“æŒ‰é’®ç‚¹å‡»äº‹ä»¶
     process_github_repo_btn.click(
         fn=gr_funcs.process_github_repo,
-        inputs=[demo['selected_github_repo'], demo['user_id']],  # Ìí¼Ó user_id
+        inputs=[demo['selected_github_repo'], demo['user_id']],  # æ·»åŠ  user_id
         outputs=[demo['repo_summary']]
     )
 
-    # ×ÊÔ´ËÑË÷°´Å¥µã»÷ÊÂ¼ş
+    # èµ„æºæœç´¢æŒ‰é’®ç‚¹å‡»äº‹ä»¶
     resource_search_btn.click(
         fn=gr_funcs.search_resource,
         inputs=[demo['resource_query']],
         outputs=[demo['resource_search_results'], demo['selected_resource']]
     )
 
-    # ´¦Àí×ÊÔ´°´Å¥µã»÷ÊÂ¼ş
+    # å¤„ç†èµ„æºæŒ‰é’®ç‚¹å‡»äº‹ä»¶
     process_resource_btn.click(
         fn=gr_funcs.process_resource,
         inputs=[demo['selected_resource']],
         outputs=[demo['resource_summary']]
     )
 
-    # Ñ¡ÔñÂ·¾¶°´Å¥µã»÷ÊÂ¼ş
+    # é€‰æ‹©è·¯å¾„æŒ‰é’®ç‚¹å‡»äº‹ä»¶
     select_paths_btn.click(
         fn=select_paths_handler,
         inputs=[demo['user_id'], project_path, paper_path],
@@ -121,17 +121,12 @@ def bind_event_handlers(demo):
         success, user_id, cloud_storage_path = login(username, password)
         if success:
             user_info = get_user_info(user_id)
-            return f"µÇÂ¼³É¹¦£¬ÓÃ»§ID: {user_id}, ÔÆ¿âÂ·¾¶: {cloud_storage_path}", user_info
+            return f"ç™»å½•æˆåŠŸï¼Œç”¨æˆ·ID: {user_id}, äº‘åº“è·¯å¾„: {cloud_storage_path}", user_info
         else:
-            return "µÇÂ¼Ê§°Ü£¬Çë¼ì²éÓÃ»§ÃûºÍÃÜÂë", None
+            return "ç™»å½•å¤±è´¥ï¼Œè¯·æ£€æŸ¥ç”¨æˆ·åå’Œå¯†ç ", None
 
     demo.register_handler = register_handler
     demo.login_handler = login_handler
-
-
-
-
-
 
 
 
@@ -212,26 +207,26 @@ def bind_event_handlers(demo):
 #         outputs=[demo['paper_summary']]
 #     )
 
-#     # °ó¶¨ GitHub ËÑË÷ÊÂ¼ş´¦ÀíÆ÷
+#     # ï¿½ï¿½ GitHub ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 #     github_search_btn.click(
 #         fn=gr_funcs.github_search_func,
 #         inputs=[demo['github_query']],
 #         outputs=[demo['github_search_results'], demo['selected_github_repo']]
 #     )
 
-#     # °ó¶¨´¦Àí GitHub ²Ö¿âÊÂ¼ş´¦ÀíÆ÷
+#     # ï¿½ó¶¨´ï¿½ï¿½ï¿½ GitHub ï¿½Ö¿ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 #     process_github_repo_btn.click(
 #         fn=gr_funcs.process_github_repo,
 #         inputs=[demo['selected_github_repo']],
 #         outputs=[demo['repo_summary']]
 #     )
-#     # °ó¶¨¿âÄÚ×ÊÔ´ËÑË÷ÊÂ¼ş´¦ÀíÆ÷
+#     # ï¿½ó¶¨¿ï¿½ï¿½ï¿½ï¿½ï¿½Ô´ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 #     resource_search_btn.click(
 #         fn=gr_funcs.search_resource,
 #         inputs=[demo['resource_query']],
 #         outputs=[demo['resource_search_results'], demo['selected_resource']]
 #     )
-#     # °ó¶¨¿âÄÚ×ÊÔ´´¦ÀíÊÂ¼ş´¦ÀíÆ÷
+#     # ï¿½ó¶¨¿ï¿½ï¿½ï¿½ï¿½ï¿½Ô´ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 #     process_resource_btn.click(
 #         fn=gr_funcs.process_resource,
 #         inputs=[demo['selected_resource']],
@@ -246,9 +241,9 @@ def bind_event_handlers(demo):
 #         success, user_id, cloud_storage_path = login(username, password)
 #         if success:
 #             user_info = get_user_info(user_id)
-#             return f"µÇÂ¼³É¹¦£¬ÓÃ»§ID: {user_id}, ÔÆ¿âÂ·¾¶: {cloud_storage_path}", user_info
+#             return f"ï¿½ï¿½Â¼ï¿½É¹ï¿½ï¿½ï¿½ï¿½Ã»ï¿½ID: {user_id}, ï¿½Æ¿ï¿½Â·ï¿½ï¿½: {cloud_storage_path}", user_info
 #         else:
-#             return "µÇÂ¼Ê§°Ü£¬Çë¼ì²éÓÃ»§ÃûºÍÃÜÂë", None
+#             return "ï¿½ï¿½Â¼Ê§ï¿½Ü£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½", None
 
 #     demo.register_handler = register_handler
 #     demo.login_handler = login_handler
