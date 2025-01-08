@@ -8,9 +8,10 @@ os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
 os.environ["MODELSCOPE_CACHE"] = 'models/'
+db_path = './DB_base/user_data.db'
 
 def init_db():
-    conn = sqlite3.connect('user_data.db')
+    conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     
     # 创建表
@@ -20,7 +21,9 @@ def init_db():
         username TEXT UNIQUE NOT NULL,
         password TEXT NOT NULL,
         email TEXT UNIQUE NOT NULL,
-        cloud_storage_path TEXT NOT NULL
+        cloud_storage_path TEXT NOT NULL,
+        selected_project_path TEXT DEFAULT NULL,
+        selected_paper_path TEXT DEFAULT NULL
     );
     ''')
 
@@ -60,9 +63,8 @@ def init_db():
     conn.commit()
     conn.close()
 
-
 def register(username, password, email):
-    conn = sqlite3.connect('user_data.db')
+    conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
     # 检查用户名和邮箱是否已存在
@@ -86,7 +88,7 @@ def register(username, password, email):
     return True, "注册成功"
 
 def login(username, password):
-    conn = sqlite3.connect('user_data.db')
+    conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
     # 检查用户名和密码
@@ -103,7 +105,7 @@ def login(username, password):
         return False, "用户名或密码错误"
 
 def get_user_info(user_id):
-    conn = sqlite3.connect('user_data.db')
+    conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
     try:
@@ -116,7 +118,9 @@ def get_user_info(user_id):
                 'user_id': user[0],
                 'username': user[1],
                 'email': user[3],
-                'cloud_storage_path': user[4]
+                'cloud_storage_path': user[4],
+                'selected_project_path': user[5],
+                'selected_paper_path': user[6]
             }
 
             # 获取对话记录
@@ -139,32 +143,198 @@ def get_user_info(user_id):
         print(f"Error retrieving user info: {e}")
         return None
 
+def select_paths_handler(user_id, project_path, paper_path):
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute('''
+        UPDATE users
+        SET selected_project_path = ?, selected_paper_path = ?
+        WHERE user_id = ?
+    ''', (project_path, paper_path, user_id))
+    conn.commit()
+    conn.close()
+    return "路径选择成功"
 
-def main(prj_dir):
-    build_ui(prj_dir)
+def main():
+    build_ui()
 
 if __name__ == '__main__':
     from config import init_config
     init_config()
     init_db()  # 初始化数据库
-    main(os.environ['PRJ_DIR'])
+    main()
 
 
 
 
 
-# from ma_ui import build_ui
+# # main.py
 # import os
+# import sqlite3
+# from ma_ui import build_ui
+# import hashlib
 
 # os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 # os.environ["TOKENIZERS_PARALLELISM"] = "false"
 # os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
 # os.environ["MODELSCOPE_CACHE"] = 'models/'
+# db_path = './DB_base/user_data.db'
+# def init_db():
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+    
+#     # 创建表
+#     cursor.execute('''
+#     CREATE TABLE IF NOT EXISTS users (
+#         user_id INTEGER PRIMARY KEY AUTOINCREMENT,
+#         username TEXT UNIQUE NOT NULL,
+#         password TEXT NOT NULL,
+#         email TEXT UNIQUE NOT NULL,
+#         cloud_storage_path TEXT NOT NULL
+#     );
+#     ''')
 
-# def main(prj_dir):
-#     build_ui(prj_dir)
+#     cursor.execute('''
+#     CREATE TABLE IF NOT EXISTS user_conversations (
+#         conversation_id INTEGER PRIMARY KEY AUTOINCREMENT,
+#         user_id INTEGER NOT NULL,
+#         conversation_history TEXT NOT NULL,
+#         FOREIGN KEY (user_id) REFERENCES users(user_id)
+#     );
+#     ''')
+
+#     cursor.execute('''
+#     CREATE TABLE IF NOT EXISTS user_resources (
+#         resource_id INTEGER PRIMARY KEY AUTOINCREMENT,
+#         user_id INTEGER NOT NULL,
+#         resource_name TEXT NOT NULL,
+#         resource_path TEXT NOT NULL,
+#         FOREIGN KEY (user_id) REFERENCES users(user_id)
+#     );
+#     ''')
+
+#     cursor.execute('''
+#     CREATE TABLE IF NOT EXISTS admins (
+#         admin_id INTEGER PRIMARY KEY AUTOINCREMENT,
+#         username TEXT UNIQUE NOT NULL,
+#         password TEXT NOT NULL
+#     );
+#     ''')
+
+#     # 插入初始管理员账户
+#     admin_password_hash = hashlib.sha256('admin_password'.encode()).hexdigest()
+#     cursor.execute('''
+#     INSERT OR IGNORE INTO admins (username, password) VALUES (?, ?);
+#     ''', ('admin', admin_password_hash))
+
+#     conn.commit()
+#     conn.close()
+
+
+# def register(username, password, email):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+
+#     # 检查用户名和邮箱是否已存在
+#     cursor.execute('SELECT * FROM users WHERE username=? OR email=?', (username, email))
+#     if cursor.fetchone():
+#         conn.close()
+#         return False, "用户名或邮箱已存在"
+
+#     # 生成用户ID
+#     cursor.execute('INSERT INTO users (username, password, email, cloud_storage_path) VALUES (?, ?, ?, ?)',
+#                    (username, hashlib.sha256(password.encode()).hexdigest(), email, ''))
+#     user_id = cursor.lastrowid
+
+#     # 创建用户云库目录
+#     cloud_storage_path = f'./Cloud_base/{user_id}'
+#     os.makedirs(cloud_storage_path, exist_ok=True)
+#     cursor.execute('UPDATE users SET cloud_storage_path = ? WHERE user_id = ?', (cloud_storage_path, user_id))
+
+#     conn.commit()
+#     conn.close()
+#     return True, "注册成功"
+
+# def login(username, password):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+
+#     # 检查用户名和密码
+#     cursor.execute('SELECT * FROM users WHERE username=? AND password=?', (username, hashlib.sha256(password.encode()).hexdigest()))
+#     user = cursor.fetchone()
+
+#     if user:
+#         user_id = user[0]
+#         cloud_storage_path = user[4]
+#         conn.close()
+#         return True, user_id, cloud_storage_path
+#     else:
+#         conn.close()
+#         return False, "用户名或密码错误"
+
+# def get_user_info(user_id):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+
+#     try:
+#         # 获取用户信息
+#         cursor.execute('SELECT * FROM users WHERE user_id=?', (user_id,))
+#         user = cursor.fetchone()
+
+#         if user:
+#             user_info = {
+#                 'user_id': user[0],
+#                 'username': user[1],
+#                 'email': user[3],
+#                 'cloud_storage_path': user[4]
+#             }
+
+#             # 获取对话记录
+#             cursor.execute('SELECT * FROM user_conversations WHERE user_id=?', (user_id,))
+#             conversations = cursor.fetchall()
+#             user_info['conversations'] = [{'conversation_id': c[0], 'conversation_history': c[2]} for c in conversations]
+
+#             # 获取资源信息
+#             cursor.execute('SELECT * FROM user_resources WHERE user_id=?', (user_id,))
+#             resources = cursor.fetchall()
+#             user_info['resources'] = [{'resource_id': r[0], 'resource_name': r[2], 'resource_path': r[3]} for r in resources]
+
+#             conn.close()
+#             return user_info
+#         else:
+#             conn.close()
+#             return None
+#     except Exception as e:
+#         conn.close()
+#         print(f"Error retrieving user info: {e}")
+#         return None
+
+
+# def main():
+#     build_ui()
 
 # if __name__ == '__main__':
 #     from config import init_config
 #     init_config()
+#     init_db()  # 初始化数据库
 #     main(os.environ['PRJ_DIR'])
+
+
+
+
+
+# # from ma_ui import build_ui
+# # import os
+
+# # os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+# # os.environ["TOKENIZERS_PARALLELISM"] = "false"
+# # os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
+# # os.environ["MODELSCOPE_CACHE"] = 'models/'
+
+# # def main(prj_dir):
+# #     build_ui(prj_dir)
+
+# # if __name__ == '__main__':
+# #     from config import init_config
+# #     init_config()
+# #     main(os.environ['PRJ_DIR'])

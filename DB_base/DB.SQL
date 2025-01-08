@@ -26,6 +26,13 @@ CREATE TABLE user_resources (
     resource_path TEXT NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
+
+
+ALTER TABLE users
+ADD COLUMN selected_project_path TEXT DEFAULT NULL;
+
+ALTER TABLE users
+ADD COLUMN selected_paper_path TEXT DEFAULT NULL;
 /*
 
 -- 插入用户数据

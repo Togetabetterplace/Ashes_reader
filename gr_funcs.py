@@ -12,6 +12,19 @@ import config
 import os
 
 def analyse_project(prj_path, progress=gr.Progress()):
+    """
+    分析项目文件并生成阅读进度。
+
+    本函数递归读取指定项目路径下的所有文件，并使用GPT模型生成每个文件的阅读总结。
+    它通过`progress`参数报告阅读进度。
+
+    参数:
+    - prj_path (str): 项目路径，表示需要分析的项目的根目录。
+    - progress (gr.Progress): 进度对象，用于报告函数执行的进度，默认为gr.Progress实例。
+
+    返回:
+    - str: 总是返回 '阅读完成'，表示项目文件阅读完毕。
+    """
     llm_responses = {}  # 使用局部变量避免全局变量冲突
     file_list = projectIO_utils.get_all_files_in_folder(prj_path)
 
@@ -50,8 +63,20 @@ def get_lang_from_file(file_name):
     return extensions.get(ext)
 
 def view_prj_file(selected_file):
+    """
+    根据选定的文件显示项目文件的内容和GPT响应。
+
+    参数:
+    - selected_file (str): 选定的文件路径。
+
+    该函数首先检查选定文件是否有对应的GPT响应，如果没有或文件不在响应列表中，
+    则隐藏GPT响应的UI元素。然后根据文件内容生成适当的语法高亮显示，并根据文件类型
+    设置语言。最后，生成选定文件的内容和GPT响应文本。
+    """
+    # 获取已缓存的GPT响应，如果没有则初始化为空字典
     llm_responses = getattr(view_prj_file, 'llm_responses', {})
-    
+
+    # 检查是否有GPT响应，如果没有或选定文件不在响应列表中，则隐藏GPT响应的UI元素
     if not llm_responses or selected_file not in llm_responses:  # 没有gpt的结果，只查看代码
         gpt_res_update = gr.update(visible=False)
         gpt_label_update = gr.update(visible=False)
@@ -61,8 +86,13 @@ def view_prj_file(selected_file):
         gpt_label_update = gr.update(visible=True)
         gpt_res_text = llm_responses[selected_file]
 
+    # 获取文件的语言类型
     lang = get_lang_from_file(selected_file)
+
+    # 首先生成语法高亮显示的文件内容和隐藏/显示GPT响应的UI更新
     yield gr.update(visible=True, language=lang), gpt_label_update, gpt_res_update
+
+    # 最后生成选定文件的内容和GPT响应文本
     yield (selected_file,), [[None, None]], gpt_res_text
 
 def gen_prj_summary_prompt(llm_responses):
@@ -103,27 +133,47 @@ def view_uncmt_file(selected_file):
                                                                        value='添加注释'), gr.update(visible=False)
 
 def ai_comment(btn_name, selected_file, user_id):
+    """
+    根据按钮名称、选定的文件和用户ID生成注释。
+    如果按钮名称不是'添加注释'，则隐藏按钮。
+    否则，读取文件内容，向GPT服务器请求添加注释，并更新界面显示带有注释的代码。
+    如果在处理过程中遇到异常，记录错误并显示错误信息。
+
+    :param btn_name: 按钮名称，用于判断是否需要添加注释。
+    :param selected_file: 选定的文件，从中读取代码。
+    :param user_id: 用户ID，暂未使用。
+    :yield: 更新界面的指令，包括按钮文本和界面更新参数。
+    """
+    # 检查按钮名称是否为'添加注释'，如果不是，则隐藏按钮
     if btn_name != '添加注释':
         yield btn_name, gr.update(visible=False)
     else:
+        # 显示正在添加注释的消息，并隐藏按钮
         yield '注释添加中...', gr.update(visible=False)
 
+        # 从文件名中获取语言类型
         lang = get_lang_from_file(selected_file)
+        # 读取选定文件的代码内容
         with open(selected_file, 'r', encoding='utf-8') as f:
             file_content = f.read()
+        # 构建系统提示和用户提示
         sys_prompt = "你是一位资深的程序员，能够读懂任何代码，并为其增加中文注释，如果是函数，需要为函数docstrings格式的注释。" \
                      "直接返回修改的结果，不需要其他额外的解释。"
         user_prompt = f"源代码：\n```{file_content}```"
 
         try:
+            # 向GPT服务器请求添加注释
             response = gpt_server.request_llm(sys_prompt, [(user_prompt, None)])
             res_code = next(response)
+            # 检查返回的代码是否以```开始和结束，如果是，则提取代码块
             if res_code.startswith('```') and res_code.endswith('```'):
                 code_blocks = re.findall(r'```(?:\w+)?\n(.*?)\n```', res_code, re.DOTALL)
                 res_code = code_blocks[0]
 
+            # 显示添加注释后的代码
             yield '添加注释', gr.update(visible=True, language=lang, value=res_code)
         except Exception as e:
+            # 记录错误并显示错误信息
             logging.error(f"处理文件 {selected_file} 添加注释失败: {e}")
             yield '添加注释失败', gr.update(visible=True, language=lang, value=f"添加注释失败: {e}")
 

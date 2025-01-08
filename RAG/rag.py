@@ -1,16 +1,22 @@
 # file: /Users/zyb/Desktop/CSU_Zichen/graduation-design/Ashes_reader/RAG/rag.py
 
+
 import os
 import json
+from tqdm import tqdm
 import jieba
 import torch
-from tqdm import tqdm
-from modelscope import AutoTokenizer, AutoModelForSequenceClassification
-from vllm import LLM, SamplingParams
-from faiss import FAISS
-from BM25Model import BM25Model  # 假设BM25Model在当前目录下
-from snapshot_download import snapshot_download  # 假设snapshot_download在当前目录下
-from llms.LLM_init import LLMPredictor  # 假设LLMPredictor在llms.LLM_init中
+from bm25 import BM25Model
+from pdfparser import extract_page_text
+from langchain_community.vectorstores import FAISS
+from embeddings import PEmbedding
+from LLM import LLMPredictor
+from modelscope import snapshot_download
+import numpy as np
+from vllm import SamplingParams
+from RAG.LLM_generation_utils import make_context, decode_tokens, get_stop_words_ids
+from transformers import AutoModelForSequenceClassification, AutoTokenizer, AutoModel
+
 
 
 def infer_by_batch(prompts, llm):

@@ -2,11 +2,16 @@
 import gradio as gr
 import handlers
 import config
+import sqlite3
+import os
 from utils.github_search import search_github, download_repo
 from utils.arXiv_search import arxiv_search, is_arxiv_id, translate_text
 from main import register, login, get_user_info
 
-def build_ui(prj_dir):
+db_path = './DB_base/user_data.db'
+user_id = None  # 定义一个全局变量来存储用户ID
+
+def build_ui():
     css = """
     #prg_chatbot { box-shadow: 0px 0px 1px rgba(0, 0, 0, 0.6); /* 设置阴影 */ }
     #prg_tb { box-shadow: 0px 0px 1px rgba(0, 0, 0, 0.6); /* 设置阴影 */ }
@@ -22,14 +27,14 @@ def build_ui(prj_dir):
     """
 
     with gr.Blocks(title="科研小助手", theme=gr.themes.Soft(), analytics_enabled=False, css=css) as demo:
-        prj_name_tb = gr.Textbox(value=f'{prj_dir}', visible=False)  # 没有实际含义
+        prj_name_tb = gr.Textbox(value=f'{os.environ["PRJ_DIR"]}', visible=False)  # 没有实际含义
         with gr.Accordion(label='选择模型（选择开源大模型，如果本地没有，会自动下载，下载完毕后再使用下面的功能）'):
             model_selector = gr.Dropdown(
                 choices=config.model_list, container=False, elem_id='box_shad')
 
         with gr.Row():
             prj_fe = gr.FileExplorer(
-                label='项目文件', root=prj_dir, file_count='single', scale=1)
+                label='项目文件', root=os.environ["PRJ_DIR"], file_count='single', scale=1)
 
         with gr.Accordion('用户注册', open=False):
             with gr.Row():
@@ -45,6 +50,13 @@ def build_ui(prj_dir):
                 login_password = gr.Textbox(label='密码', type='password', interactive=True, scale=2)
             with gr.Row():
                 login_btn = gr.Button('登录', variant='primary')
+
+        with gr.Accordion('选择项目或论文路径', open=False):
+            with gr.Row():
+                project_path = gr.Dropdown(label='项目路径', interactive=True, scale=2)
+                paper_path = gr.Dropdown(label='论文路径', interactive=True, scale=2)
+            with gr.Row():
+                select_paths_btn = gr.Button('选择路径', variant='primary')
 
         with gr.Accordion('阅读项目', open=False):
             with gr.Row():
@@ -151,7 +163,7 @@ def build_ui(prj_dir):
                 repo_summary = gr.Markdown(
                     label='仓库摘要', elem_classes='markdown-class')
         
-        #新增库内资源选项卡
+        # 新增库内资源选项卡
         with gr.Accordion(label='库内资源', open=False):
             with gr.Row():
                 resource_query = gr.Textbox(
@@ -179,6 +191,7 @@ def build_ui(prj_dir):
             return message
 
         def login_handler(username, password):
+            global user_id  # 使用全局变量
             success, user_id, cloud_storage_path = login(username, password)
             if success:
                 user_info = get_user_info(user_id)
@@ -186,15 +199,32 @@ def build_ui(prj_dir):
             else:
                 return "登录失败，请检查用户名和密码", None
 
+        def select_paths_handler(user_id, project_path, paper_path):
+            success_message = select_paths_handler(user_id, project_path, paper_path)
+            return success_message
+
+        def load_user_resources(user_id):
+            user_info = get_user_info(user_id)
+            if not user_info:
+                return [], []
+
+            project_choices = [resource['resource_path'] for resource in user_info['resources'] if 'project' in resource['resource_name'].lower()]
+            paper_choices = [resource['resource_path'] for resource in user_info['resources'] if 'paper' in resource['resource_name'].lower()]
+
+            return project_choices, paper_choices
+
         register_btn.click(fn=register_handler, inputs=[register_username, register_email, register_password], outputs=gr.Textbox())
         login_btn.click(fn=login_handler, inputs=[login_username, login_password], outputs=[gr.Textbox(), gr.JSON()])
+        
+        def update_resource_choices(user_id):
+            project_choices, paper_choices = load_user_resources(user_id)
+            return gr.update(choices=project_choices), gr.update(choices=paper_choices)
+
+        login_btn.click(fn=update_resource_choices, inputs=[login_username], outputs=[project_path, paper_path])
+
+        select_paths_btn.click(fn=select_paths_handler, inputs=[gr.State(user_id), project_path, paper_path], outputs=gr.Textbox())
 
     demo.launch(share=False)
-
-
-
-
-
 
 
 
