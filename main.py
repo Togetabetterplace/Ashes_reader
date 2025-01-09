@@ -28,7 +28,13 @@ for var in required_env_vars:
 
 app = Flask(__name__)
 
+@app.errorhandler(404)
+def not_found(error):
+    return jsonify({'error': 'Not Found'}), 404
 
+@app.errorhandler(500)
+def internal_error(error):
+    return jsonify({'error': 'Internal Server Error'}), 500
 # 创建新对话
 @app.route('/conversations', methods=['POST'])
 def create_conversation():
@@ -268,3 +274,4 @@ if __name__ == '__main__':
     init_config()
     init_db()  # 初始化数据库
     main()
+    app.run(host='0.0.0.0', port=5000, debug=True)
