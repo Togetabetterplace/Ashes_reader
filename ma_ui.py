@@ -11,7 +11,7 @@ from main import register, login, get_user_info
 db_path = './DB_base/user_data.db'
 user_id = None  # 定义一个全局变量来存储用户ID
 
-def build_ui():
+def build_ui(llm):
     css = """
     #prg_chatbot { box-shadow: 0px 0px 1px rgba(0, 0, 0, 0.6); /* 设置阴影 */ }
     #prg_tb { box-shadow: 0px 0px 1px rgba(0, 0, 0, 0.6); /* 设置阴影 */ }
@@ -183,7 +183,7 @@ def build_ui():
                     label='资源摘要', elem_classes='markdown-class')
 
         # 绑定事件处理器
-        handlers.bind_event_handlers(demo)
+        handlers.bind_event_handlers(demo, llm)
 
         # 注册和登录事件处理器
         def register_handler(username, email, password):

@@ -41,19 +41,17 @@ def rerank(docs, query, rerank_tokenizer, rerank_model, k=4):
     ranked_docs = [doc for _, doc in sorted(zip(scores, docs), reverse=True)[:k]]
     return ranked_docs
 
-def rag_inference(query, model_path, cache_dir='RAG_cache', batch_size=4, num_input_docs=4):
+def rag_inference(query, llm, cache_dir='RAG_cache', batch_size=4, num_input_docs=4):
     """
     通过向量库进行 RAG 操作。
 
     参数:
     - query (str): 用户输入的查询。
-    - model_path (str): 语言模型的路径。
+    - llm (LLMPredictor): 语言模型预测器实例。
     - cache_dir (str): 向量库存储的文件夹路径，默认为 'RAG_cache'。
     - batch_size (int): 批处理大小，默认为 4。
     - num_input_docs (int): 每个问题使用的文档数量，默认为 4。
     """
-    # 初始化LLM预测器
-    llm = LLMPredictor(model_path=model_path, is_chatglm=False, device='cuda:0')
 
     # 初始化重排序模型的tokenizer和model
     rerank_tokenizer = AutoTokenizer.from_pretrained(snapshot_download('BAAI/bge-reranker-large'), low_cpu_mem_usage=True)
@@ -196,7 +194,7 @@ if __name__ == "__main__":
 #     res = llm.model.generate(batch_raw_text, sampling_params, use_tqdm=False)
 
 #     # 处理推理结果，移除不必要的标记和格式
-#     res = [output.outputs[0].text.replace('<|im_end|>', '').replace('\n', '') for output in res]
+#     res = [output.outputs[0].text.replace('```, '').replace('\n', '') for output in res]
 #     return res
 
 
@@ -412,7 +410,7 @@ if __name__ == "__main__":
 # # os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
 # # os.environ["MODELSCOPE_CACHE"] = 'models/'
 # # os.path.append('./models')
-# # # torch.cuda.set_per_process_memory_fraction(0.93)  export MODELSCOPE_CACHE='models
+# # # torch.cuda.set_per_process_memory_fraction(0.93)  export MODELSCOPE_CACHE='models'
 
 
 # # def create_json_line(text):

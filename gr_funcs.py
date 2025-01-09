@@ -108,7 +108,7 @@ def gen_prj_summary_prompt(llm_responses):
     suffix_prompt = '你做的是类似"README"对整个项目的总结，而不需要再对单个文件做总结。"'
     return f'{prompt}{suffix_prompt}'
 
-def prj_chat(user_in_text: str, prj_chatbot: list):
+def prj_chat(user_in_text: str, prj_chatbot: list, llm):
     sys_prompt = "你是一位资深的导师，指导算法专业的毕业生写论文，这里有些代码需要总结，也有一些论文改写工作需要你指导。"
     prj_chatbot.append([user_in_text, ''])
     yield prj_chatbot
@@ -116,9 +116,9 @@ def prj_chat(user_in_text: str, prj_chatbot: list):
     if user_in_text == '总结整个项目':  # 新起对话，总结项目
         new_prompt = gen_prj_summary_prompt(llm_responses)
         print(new_prompt)
-        llm_responses = gpt_server.request_llm(sys_prompt, [(new_prompt, None)], stream=True)
+        llm_responses = llm.request(sys_prompt, [(new_prompt, None)], stream=True)
     else:
-        llm_responses = gpt_server.request_llm(sys_prompt, prj_chatbot, stream=True)
+        llm_responses = llm.request(sys_prompt, prj_chatbot, stream=True)
 
     for chunk_content in llm_responses:
         prj_chatbot[-1][1] = chunk_content
@@ -132,7 +132,7 @@ def view_uncmt_file(selected_file):
     return gr.update(language=lang, value=(selected_file,)), gr.update(variant='primary', interactive=True,
                                                                        value='添加注释'), gr.update(visible=False)
 
-def ai_comment(btn_name, selected_file, user_id):
+def ai_comment(btn_name, selected_file, user_id, llm):
     """
     根据按钮名称、选定的文件和用户ID生成注释。
     如果按钮名称不是'添加注释'，则隐藏按钮。
@@ -163,7 +163,7 @@ def ai_comment(btn_name, selected_file, user_id):
 
         try:
             # 向GPT服务器请求添加注释
-            response = gpt_server.request_llm(sys_prompt, [(user_prompt, None)])
+            response = llm.request(sys_prompt, [(user_prompt, None)])
             res_code = next(response)
             # 检查返回的代码是否以```开始和结束，如果是，则提取代码块
             if res_code.startswith('```') and res_code.endswith('```'):
@@ -187,7 +187,7 @@ def view_raw_lang_code_file(selected_file):
         , gr.update(variant='primary', interactive=True, value='转换')\
         , gr.update(visible=False)
 
-def change_code_lang(btn_name, raw_code, to_lang, user_id):
+def change_code_lang(btn_name, raw_code, to_lang, user_id, llm):
     if btn_name != '转换':
         yield btn_name, gr.update(visible=False)
     else:
@@ -201,7 +201,7 @@ def change_code_lang(btn_name, raw_code, to_lang, user_id):
         user_prompt = f"源代码：\n```{raw_code}```"
 
         try:
-            response = gpt_server.request_llm(sys_prompt, [(user_prompt, None)])
+            response = llm.request(sys_prompt, [(user_prompt, None)])
             res = next(response)
             yield '转换', gr.update(visible=True, value=res)
         except Exception as e:
