@@ -11,7 +11,12 @@ import logging
 import config
 import shutil
 import requests
+import sqlite3
 import os
+from main import update_prj_dir
+from ma_ui import db_path
+global prj_name_tb, selected_resource  # 使用全局变量
+
 
 def analyse_project(prj_path, progress=gr.Progress()):
     """
@@ -287,7 +292,7 @@ def select_conversation(conversation_list):
     selected_conversation = conversation_list.selected_item  # 根据实际逻辑获取选中的对话
     return selected_conversation.history  # 返回选中对话的历史记录
 
-def upload_file_handler(file, user_id):
+def upload_file_handler(file, user_id, selected_resource):
     if file is None:
         return "请选择文件或压缩包"
 
@@ -312,7 +317,6 @@ def upload_file_handler(file, user_id):
     update_prj_dir(user_id, new_dir)
 
     # 更新数据库新增资源
-    import sqlite3
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     cursor.execute('''
@@ -323,7 +327,7 @@ def upload_file_handler(file, user_id):
     conn.close()
 
     # 更新前端数据，把新的资源选项加上
-    update_resource_choices(user_id)
+    update_resource_choices(selected_resource, user_id)
 
     return f"文件 {file_name} 上传成功，保存在 {new_dir}"
 

@@ -174,10 +174,8 @@ def bind_event_handlers(demo, llm):
     demo.register_handler = register_handler
     demo.login_handler = login_handler
 
-def upload_file_handler(file, user_id, demo):
-    if file is None:
-        return "请选择文件或压缩包"
 
+def save_file(file, base_path):
     file_name = file.name
     file_path = file.name
 
@@ -185,13 +183,34 @@ def upload_file_handler(file, user_id, demo):
         # 解压压缩包
         import zipfile
         with zipfile.ZipFile(file_path, 'r') as zip_ref:
-            zip_ref.extractall('./Cloud_base/project_base')
-        new_dir = './Cloud_base/project_base'
+            zip_ref.extractall(base_path)
+        new_dir = base_path
     else:
         # 保存单个文件
         import shutil
-        shutil.copy(file_path, './Cloud_base/paper_base')
-        new_dir = './Cloud_base/paper_base'
+        shutil.copy(file_path, base_path)
+        new_dir = base_path
+
+    return file_name, new_dir
+
+def get_user_resources(user_id):
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute('SELECT resource_name FROM user_resources WHERE user_id = ?', (user_id,))
+    resources = cursor.fetchall()
+    conn.close()
+    return [r[0] for r in resources]
+
+def update_resource_choices(user_id, demo):
+    resource_choices = get_user_resources(user_id)
+    selected_resource = demo['selected_resource']  # 从 demo 中获取 selected_resource
+    selected_resource.update(choices=resource_choices)
+
+def upload_file_handler(file, user_id, demo):
+    if file is None:
+        return "请选择文件或压缩包"
+
+    file_name, new_dir = save_file(file, './Cloud_base/project_base' if file.name.endswith('.zip') else './Cloud_base/paper_base')
 
     # 更新 PRJ_DIR 为新上传资源的路径
     os.environ["PRJ_DIR"] = new_dir
@@ -210,16 +229,6 @@ def upload_file_handler(file, user_id, demo):
     conn.close()
 
     # 更新前端数据，把新的资源选项加上
-    update_resource_choices(user_id)
+    update_resource_choices(user_id, demo)
 
     return f"文件 {file_name} 上传成功，保存在 {new_dir}"
-
-def update_resource_choices(user_id, demo):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute('SELECT resource_name FROM user_resources WHERE user_id = ?', (user_id,))
-    resources = cursor.fetchall()
-    conn.close()
-    resource_choices = [r[0] for r in resources]
-    selected_resource = demo['selected_resource']  # 从 demo 中获取 selected_resource
-    selected_resource.update(choices=resource_choices)
