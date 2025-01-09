@@ -13,6 +13,7 @@ db_path = './DB_base/user_data.db'
 user_id = None  # 定义一个全局变量来存储用户ID
 current_conversation_id = None  # 定义一个全局变量来存储当前对话ID
 
+
 def build_ui(llm):
     css = """
     #prg_chatbot { box-shadow: 0px 0px 1px rgba(0, 0, 0, 0.6); /* 设置阴影 */ }
@@ -191,6 +192,11 @@ def build_ui(llm):
                 download_resource_btn = gr.Button(
                     value='下载资源', variant='primary', scale=1, min_width=100)  # 新增下载按钮
 
+            # 新增上传文件选项卡
+            with gr.Row():
+                upload_file = gr.File(label='上传文件', file_count='single', file_types=["file", "zip"])
+                upload_btn = gr.Button('上传', variant='primary', scale=1, min_width=100)
+
         # 绑定事件处理器
         handlers.bind_event_handlers(demo, llm)
 
@@ -268,6 +274,55 @@ def build_ui(llm):
             prj_name_tb.update(value=selected_resource)
             update_prj_dir(user_id, selected_resource)
 
+        def upload_file_handler(file, user_id):
+            if file is None:
+                return "请选择文件或压缩包"
+
+            file_name = file.name
+            file_path = file.name
+
+            if file_name.endswith('.zip'):
+                # 解压压缩包
+                import zipfile
+                with zipfile.ZipFile(file_path, 'r') as zip_ref:
+                    zip_ref.extractall('./Cloud_base/project_base')
+                new_dir = './Cloud_base/project_base'
+            else:
+                # 保存单个文件
+                import shutil
+                shutil.copy(file_path, './Cloud_base/paper_base')
+                new_dir = './Cloud_base/paper_base'
+
+            # 更新 PRJ_DIR 为新上传资源的路径
+            os.environ["PRJ_DIR"] = new_dir
+            prj_name_tb.update(value=new_dir)
+            update_prj_dir(user_id, new_dir)
+
+            # 更新数据库新增资源
+            import sqlite3
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT INTO user_resources (user_id, resource_name, resource_path)
+                VALUES (?, ?, ?)
+            ''', (user_id, file_name, new_dir))
+            conn.commit()
+            conn.close()
+
+            # 更新前端数据，把新的资源选项加上
+            update_resource_choices(user_id)
+
+            return f"文件 {file_name} 上传成功，保存在 {new_dir}"
+
+        def update_resource_choices(user_id):
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
+            cursor.execute('SELECT resource_name FROM user_resources WHERE user_id = ?', (user_id,))
+            resources = cursor.fetchall()
+            conn.close()
+            resource_choices = [r[0] for r in resources]
+            selected_resource.update(choices=resource_choices)
+
         register_btn.click(fn=register_handler, inputs=[register_username, register_email, register_password], outputs=gr.Textbox())
         login_btn.click(fn=login_handler, inputs=[login_username, login_password], outputs=[gr.Textbox(), gr.JSON()])
         conversation_list.change(fn=select_conversation, inputs=[conversation_list], outputs=[conversation_history])
@@ -277,5 +332,6 @@ def build_ui(llm):
         search_btn.click(fn=process_arxiv_search, inputs=[search_query, demo['user_id']], outputs=[search_results, selected_paper])
         github_search_btn.click(fn=process_github_search, inputs=[github_query, demo['user_id']], outputs=[github_search_results, selected_github_repo])
         process_resource_btn.click(fn=process_selected_resource, inputs=[selected_resource, demo['user_id']], outputs=[resource_summary])
+        upload_btn.click(fn=upload_file_handler, inputs=[upload_file, demo['user_id']], outputs=gr.Textbox())
 
     demo.launch(share=False)

@@ -1,11 +1,16 @@
 # handlers.py
 import gr_funcs
 import gradio as gr
+import sqlite3
+import os
 from utils.github_search import search_github, download_repo
 from utils.arXiv_search import arxiv_search
 from utils.projectIO_utils import get_all_files_in_folder
 from main import get_user_info, register, login, select_paths_handler
 from gr_funcs import select_conversation, create_new_conversation
+from main import update_prj_dir  # 假设 update_prj_dir 在 main 模块中定义
+from ma_ui import db_path
+
 
 def bind_event_handlers(demo, llm):
     model_selector = demo['model_selector']
@@ -169,3 +174,52 @@ def bind_event_handlers(demo, llm):
     demo.register_handler = register_handler
     demo.login_handler = login_handler
 
+def upload_file_handler(file, user_id, demo):
+    if file is None:
+        return "请选择文件或压缩包"
+
+    file_name = file.name
+    file_path = file.name
+
+    if file_name.endswith('.zip'):
+        # 解压压缩包
+        import zipfile
+        with zipfile.ZipFile(file_path, 'r') as zip_ref:
+            zip_ref.extractall('./Cloud_base/project_base')
+        new_dir = './Cloud_base/project_base'
+    else:
+        # 保存单个文件
+        import shutil
+        shutil.copy(file_path, './Cloud_base/paper_base')
+        new_dir = './Cloud_base/paper_base'
+
+    # 更新 PRJ_DIR 为新上传资源的路径
+    os.environ["PRJ_DIR"] = new_dir
+    prj_name_tb = demo['prj_name_tb']  # 从 demo 中获取 prj_name_tb
+    prj_name_tb.update(value=new_dir)
+    update_prj_dir(user_id, new_dir)
+
+    # 更新数据库新增资源
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute('''
+        INSERT INTO user_resources (user_id, resource_name, resource_path)
+        VALUES (?, ?, ?)
+    ''', (user_id, file_name, new_dir))
+    conn.commit()
+    conn.close()
+
+    # 更新前端数据，把新的资源选项加上
+    update_resource_choices(user_id)
+
+    return f"文件 {file_name} 上传成功，保存在 {new_dir}"
+
+def update_resource_choices(user_id, demo):
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute('SELECT resource_name FROM user_resources WHERE user_id = ?', (user_id,))
+    resources = cursor.fetchall()
+    conn.close()
+    resource_choices = [r[0] for r in resources]
+    selected_resource = demo['selected_resource']  # 从 demo 中获取 selected_resource
+    selected_resource.update(choices=resource_choices)

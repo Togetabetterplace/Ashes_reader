@@ -246,10 +246,78 @@ def update_prj_dir(user_id, new_dir):
     conn.commit()
     conn.close()
 
+def upload_file_handler(file, user_id):
+    if file is None:
+        return "请选择文件或压缩包"
+
+    file_name = file.name
+    file_path = file.name
+
+    if file_name.endswith('.zip'):
+        # 解压压缩包
+        import zipfile
+        with zipfile.ZipFile(file_path, 'r') as zip_ref:
+            zip_ref.extractall('./Cloud_base/project_base')
+        new_dir = './Cloud_base/project_base'
+    else:
+        # 保存单个文件
+        import shutil
+        shutil.copy(file_path, './Cloud_base/paper_base')
+        new_dir = './Cloud_base/paper_base'
+
+    # 更新 PRJ_DIR 为新上传资源的路径
+    os.environ["PRJ_DIR"] = new_dir
+    prj_name_tb.update(value=new_dir)
+    update_prj_dir(user_id, new_dir)
+
+    # 更新数据库新增资源
+    import sqlite3
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute('''
+        INSERT INTO user_resources (user_id, resource_name, resource_path)
+        VALUES (?, ?, ?)
+    ''', (user_id, file_name, new_dir))
+    conn.commit()
+    conn.close()
+
+    # 更新前端数据，把新的资源选项加上
+    update_resource_choices(user_id)
+
+    return f"文件 {file_name} 上传成功，保存在 {new_dir}"
+
+def update_resource_choices(user_id):
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute('SELECT resource_name FROM user_resources WHERE user_id = ?', (user_id,))
+    resources = cursor.fetchall()
+    conn.close()
+    resource_choices = [r[0] for r in resources]
+    if 'selected_resource' in globals():
+        selected_resource.update(choices=resource_choices)
+    else:
+        print("selected_resource 未定义，请检查代码逻辑")
+
+# def main():
+#     model_path = snapshot_download("OpenScholar/Llama-3.1_OpenScholar-8B")
+#     llm = Llama(model_name='Llama', model_path=model_path)  # 初始化 Llama 实例
+#     build_ui(llm)
+
+# if __name__ == '__main__':
+#     from config import init_config
+#     init_config()
+#     init_db()  # 初始化数据库
+#     main()
+
+
 def main():
     model_path = snapshot_download("OpenScholar/Llama-3.1_OpenScholar-8B")
     llm = Llama(model_name='Llama', model_path=model_path)  # 初始化 Llama 实例
-    build_ui(llm)
+    global prj_name_tb, selected_resource  # 使用全局变量
+    # 假设 build_ui 返回一个包含 UI 组件的字典
+    ui_components = build_ui(llm)
+    prj_name_tb = ui_components.get('prj_name_tb')
+    selected_resource = ui_components.get('selected_resource')  # 初始化 selected_resource
 
 if __name__ == '__main__':
     from config import init_config
