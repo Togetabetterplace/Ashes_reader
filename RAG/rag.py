@@ -3,21 +3,19 @@
 
 import os
 import json
-from tqdm import tqdm
 import jieba
 import torch
 from bm25 import BM25Model
-from pdfparser import extract_page_text
 from langchain_community.vectorstores import FAISS
 from embeddings import PEmbedding
-from LLM import LLMPredictor
 from modelscope import snapshot_download
-import numpy as np
-from vllm import SamplingParams
-from RAG.LLM_generation_utils import make_context, decode_tokens, get_stop_words_ids
 from transformers import AutoModelForSequenceClassification, AutoTokenizer, AutoModel
-
-
+# import numpy as np
+# from vllm import SamplingParams
+# from RAG.LLM_generation_utils import make_context, decode_tokens, get_stop_words_ids
+# from RAG.LLM_bm25 import LLMPredictor
+# from tqdm import tqdm
+# from pdfparser import extract_page_text
 
 def infer_by_batch(prompts, llm):
     """
@@ -41,7 +39,7 @@ def rerank(docs, query, rerank_tokenizer, rerank_model, k=4):
     ranked_docs = [doc for _, doc in sorted(zip(scores, docs), reverse=True)[:k]]
     return ranked_docs
 
-def rag_inference(query, llm, cache_dir='RAG_cache', batch_size=4, num_input_docs=4):
+def rag_inference(query, llm, cache_dir='./RAG_cache', batch_size=4, num_input_docs=4):
     """
     通过向量库进行 RAG 操作。
 
@@ -77,11 +75,26 @@ def rag_inference(query, llm, cache_dir='RAG_cache', batch_size=4, num_input_doc
     search_docs2 = db.similarity_search(query * 3, k=10)
     # GTE召回
     search_docs3 = db.similarity_search(query * 3, k=10)
-    # 重排序
-    search_docs4 = rerank(search_docs + search_docs2 + search_docs3, query, rerank_tokenizer, rerank_model, k=num_input_docs)
+
+    # 初始化嵌入模型
+    embedding_model = PEmbedding(model_path='path_to_embedding_model')  # 替换为实际的嵌入模型路径
+
+    # 对查询进行嵌入
+    query_embedding = embedding_model.embed_query(query)
+
+    # 对召回的文档进行嵌入
+    doc_embeddings = embedding_model.embed_documents(search_docs + search_docs2 + search_docs3)
+
+    # 计算查询与文档之间的余弦相似度
+    import numpy as np
+    similarities = np.dot(query_embedding, np.array(doc_embeddings).T).flatten()
+
+    # 结合BM25分数和嵌入相似度进行重排序
+    combined_scores = [bm25_score + similarity for bm25_score, similarity in zip(BM25.get_scores(jieba.lcut(query)), similarities)]
+    ranked_docs = [doc for _, doc in sorted(zip(combined_scores, search_docs + search_docs2 + search_docs3), reverse=True)[:num_input_docs]]
 
     # 构建提示
-    prompt1 = llm.get_prompt("\n".join(search_docs4[::-1]), query, bm25=True)
+    prompt1 = llm.get_prompt("\n".join(ranked_docs[::-1]), query, bm25=True)
     prompt2 = llm.get_prompt("\n".join(search_docs[:num_input_docs][::-1]), query, bm25=True)
     prompts1.append(prompt1)
     prompts2.append(prompt2)
@@ -93,7 +106,7 @@ def rag_inference(query, llm, cache_dir='RAG_cache', batch_size=4, num_input_doc
     # 使用jieba进行关键词切分
     question_keywords = jieba.lcut(query)
     no_answer = True
-    context = "\n".join([search_docs4[0], search_docs[1], search_docs[2]])
+    context = "\n".join([ranked_docs[0], ranked_docs[1], ranked_docs[2]])
     for kw in question_keywords:
         if kw in context:
             no_answer = False
@@ -111,12 +124,12 @@ def rag_inference(query, llm, cache_dir='RAG_cache', batch_size=4, num_input_doc
     }
 
 # 示例使用
-if __name__ == "__main__":
-    query = "什么是深度学习？"
-    model_path = "meta-llama/Llama-2-8b-chat-hf"
-    cache_dir = 'RAG_cache'
-    result = rag_inference(query, model_path, cache_dir=cache_dir, batch_size=4, num_input_docs=4)
-    print(result)
+# if __name__ == "__main__":
+#     query = "什么是深度学习？"
+#     model_path = "meta-llama/Llama-2-8b-chat-hf"
+#     cache_dir = 'RAG_cache'
+#     result = rag_inference(query, model_path, cache_dir=cache_dir, batch_size=4, num_input_docs=4)
+#     print(result)
 
 
 # import os

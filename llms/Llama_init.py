@@ -11,11 +11,11 @@ class LLM:
         pass
 
 class Llama(LLM):
-    def __init__(self, model_name):
+    def __init__(self, model_name,model_path=None):
         super().__init__(model_name)
 
-        self.tokenizer = AutoTokenizer.from_pretrained(f'meta-llama/{model_name}', trust_remote_code=True)
-        self.model = LLM(model=f'meta-llama/{model_name}', tensor_parallel_size=1, max_num_batched_tokens=8192)
+        self.tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
+        self.model = LLM(model=model_path, tensor_parallel_size=1, max_num_batched_tokens=8192)
 
     def request(self, sys_prompt, user_prompt: list, stream=False, max_length=50, top_k=50, temperature=1.0, num_return_sequences=1):
         query, _ = user_prompt[-1]

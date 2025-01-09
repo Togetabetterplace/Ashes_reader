@@ -1,24 +1,27 @@
 -- DB.SQL
--- DB.SQL
--- 创建 users 表
+-- 用户表
 CREATE TABLE users (
     user_id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT UNIQUE NOT NULL,
     password TEXT NOT NULL,
     email TEXT UNIQUE NOT NULL,
     cloud_storage_path TEXT NOT NULL,
+    selected_project_path TEXT DEFAULT NULL,
+    selected_paper_path TEXT DEFAULT NULL,
     is_admin BOOLEAN DEFAULT FALSE
 );
 
--- 创建 user_conversations 表
+-- 用户对话表
 CREATE TABLE user_conversations (
     conversation_id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
     conversation_history TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
 
--- 创建 user_resources 表
+-- 用户资源表
 CREATE TABLE user_resources (
     resource_id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
@@ -26,13 +29,6 @@ CREATE TABLE user_resources (
     resource_path TEXT NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
-
-
-ALTER TABLE users
-ADD COLUMN selected_project_path TEXT DEFAULT NULL;
-
-ALTER TABLE users
-ADD COLUMN selected_paper_path TEXT DEFAULT NULL;
 /*
 
 -- 插入用户数据

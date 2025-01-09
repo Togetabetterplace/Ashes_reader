@@ -23,22 +23,22 @@ def init_config():
     if not os.environ['PRJ_DIR']:
         raise ValueError('没有设置项目路径')
 
-    # 配置 openai 环境变量
-    os.environ['OPENAI_BASE_URL'] = config.get('openai', 'base_url')
-    os.environ['OPENAI_API_KEY'] = config.get('openai', 'api_key')
+    # # 配置 openai 环境变量
+    # os.environ['OPENAI_BASE_URL'] = config.get('openai', 'base_url')
+    # os.environ['OPENAI_API_KEY'] = config.get('openai', 'api_key')
 
-    # 设置代理
-    http_proxy = config.get('openai', 'http_proxy')
-    https_proxy = config.get('openai', 'https_proxy')
-    if http_proxy:
-        os.environ['http_proxy'] = http_proxy
-    if https_proxy:
-        os.environ['https_proxy'] = https_proxy
+    # # 设置代理
+    # http_proxy = config.get('openai', 'http_proxy')
+    # https_proxy = config.get('openai', 'https_proxy')
+    # if http_proxy:
+    #     os.environ['http_proxy'] = http_proxy
+    # if https_proxy:
+    #     os.environ['https_proxy'] = https_proxy
 
-    # 配置本地大模型，魔搭环境变量
-    modelscope_cache = config.get('local_llm', 'modelscope_cache')
-    if modelscope_cache:
-        os.environ['MODELSCOPE_CACHE'] = modelscope_cache
+    # # 配置本地大模型，魔搭环境变量
+    # modelscope_cache = config.get('local_llm', 'modelscope_cache')
+    # if modelscope_cache:
+    #     os.environ['MODELSCOPE_CACHE'] = modelscope_cache
 
 def get_user_save_path(user_id, service):
     """
@@ -51,7 +51,7 @@ def get_user_save_path(user_id, service):
     返回:
     - str: 用户的保存路径。
     """
-    base_path = os.path.join('./Cloud_base', f'user_{user_id}')
+    base_path = os.path.join('./Cloud_base/', f'user_{user_id}')
     if service == 'arXiv':
         return os.path.join(base_path, 'Paper_base')
     elif service == 'github':

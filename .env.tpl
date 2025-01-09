@@ -1,7 +1,7 @@
 # # 项目
 # [prj]
 # # 【必须设置】待分析项目的绝对路径
-# dir=
+dir= ./Cloud_base/tmp/
 
 # # 配置 openai 相关的参数
 # [openai]

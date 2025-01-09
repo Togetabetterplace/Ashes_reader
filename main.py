@@ -1,17 +1,34 @@
-# main.py
 import os
 import sqlite3
 from ma_ui import build_ui
 import hashlib
 from RAG.rag import rag_inference
-from LLM import LLMPredictor
+from modelscope import snapshot_download
+from llms.Llama_init import Llama  # 导入 Llama 类
+from flask import Flask, request, jsonify
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
-os.environ["MODELSCOPE_CACHE"] = 'models/'
+os.environ["MODELSCOPE_CACHE"] = './models/'
+
+# 增加环境变量检查
+required_env_vars = [
+    'CUDA_VISIBLE_DEVICES',
+    'TOKENIZERS_PARALLELISM',
+    'HF_ENDPOINT',
+    'MODELSCOPE_CACHE'
+]
+
+for var in required_env_vars:
+    if var not in os.environ:
+        raise EnvironmentError(f"缺少必要的环境变量 {var}")
+
 db_path = './DB_base/user_data.db'
 
+app = Flask(__name__)
+
+# 初始化数据库
 def init_db():
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
@@ -25,7 +42,8 @@ def init_db():
         email TEXT UNIQUE NOT NULL,
         cloud_storage_path TEXT NOT NULL,
         selected_project_path TEXT DEFAULT NULL,
-        selected_paper_path TEXT DEFAULT NULL
+        selected_paper_path TEXT DEFAULT NULL,
+        is_admin BOOLEAN DEFAULT FALSE
     );
     ''')
 
@@ -34,6 +52,8 @@ def init_db():
         conversation_id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER NOT NULL,
         conversation_history TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users(user_id)
     );
     ''')
@@ -64,6 +84,64 @@ def init_db():
 
     conn.commit()
     conn.close()
+
+# 创建新对话
+@app.route('/conversations', methods=['POST'])
+def create_conversation():
+    user_id = request.json.get('user_id')
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute('''
+        INSERT INTO user_conversations (user_id, conversation_history)
+        VALUES (?, ?)
+    ''', (user_id, ''))
+    conversation_id = cursor.lastrowid
+    conn.commit()
+    conn.close()
+    return jsonify({'conversation_id': conversation_id}), 201
+
+# 获取对话历史
+@app.route('/conversations/<int:conversation_id>', methods=['GET'])
+def get_conversation(conversation_id):
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT conversation_history FROM user_conversations
+        WHERE conversation_id = ?
+    ''', (conversation_id,))
+    conversation = cursor.fetchone()
+    conn.close()
+    if conversation:
+        return jsonify({'conversation_history': conversation[0]}), 200
+    else:
+        return jsonify({'error': '对话不存在'}), 404
+
+# 发送消息到对话
+@app.route('/conversations/<int:conversation_id>/messages', methods=['POST'])
+def send_message(conversation_id):
+    message = request.json.get('message')
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT conversation_history FROM user_conversations
+        WHERE conversation_id = ?
+    ''', (conversation_id,))
+    conversation = cursor.fetchone()
+    if conversation:
+        new_history = conversation[0] + '\n' + message
+        cursor.execute('''
+            UPDATE user_conversations
+            SET conversation_history = ?, updated_at = CURRENT_TIMESTAMP
+            WHERE conversation_id = ?
+        ''', (new_history, conversation_id))
+        conn.commit()
+        conn.close()
+        return jsonify({'conversation_history': new_history}), 200
+    else:
+        conn.close()
+        return jsonify({'error': '对话不存在'}), 404
+
+# 其他现有接口...
 
 def register(username, password, email):
     conn = sqlite3.connect(db_path)
@@ -157,9 +235,20 @@ def select_paths_handler(user_id, project_path, paper_path):
     conn.close()
     return "路径选择成功"
 
+def update_prj_dir(user_id, new_dir):
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute('''
+        UPDATE users
+        SET selected_project_path = ?
+        WHERE user_id = ?
+    ''', (new_dir, user_id))
+    conn.commit()
+    conn.close()
+
 def main():
-    model_path = "meta-llama/Llama-2-8b-chat-hf"
-    llm = LLMPredictor(model_path=model_path, is_chatglm=False, device='cuda:0')
+    model_path = snapshot_download("OpenScholar/Llama-3.1_OpenScholar-8B")
+    llm = Llama(model_name='Llama', model_path=model_path)  # 初始化 Llama 实例
     build_ui(llm)
 
 if __name__ == '__main__':

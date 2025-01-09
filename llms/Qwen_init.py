@@ -1,5 +1,3 @@
-# file: /Users/zyb/Desktop/CSU_Zichen/graduation-design/Ashes_reader/llms/LLM_init.py
-
 from modelscope import AutoTokenizer
 from vllm import LLM, SamplingParams
 
@@ -11,11 +9,11 @@ class LLM:
         pass
 
 class Qwen(LLM):
-    def __init__(self, model_name):
+    def __init__(self, model_name, model_path=None):
         super().__init__(model_name)
 
-        self.tokenizer = AutoTokenizer.from_pretrained(f'qwen/{model_name}', trust_remote_code=True)
-        self.model = LLM(model=f'qwen/{model_name}', tensor_parallel_size=1, max_num_batched_tokens=8192)
+        self.tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
+        self.model = LLM(model=model_path, tensor_parallel_size=1, max_num_batched_tokens=8192)
 
     def request(self, sys_prompt, user_prompt: list, stream=False, max_length=50, top_k=50, temperature=1.0, num_return_sequences=1):
         query, _ = user_prompt[-1]
