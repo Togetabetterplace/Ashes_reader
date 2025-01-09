@@ -6,7 +6,8 @@ import os
 import gr_funcs
 from utils.github_search import search_github, download_repo
 from utils.arXiv_search import arxiv_search, is_arxiv_id, translate_text
-from main import register, login, get_user_info, create_conversation, get_conversation, update_prj_dir
+from main import register, login, get_user_info, create_conversation, get_conversation
+from utils.update_utils import update_prj_dir
 from config import db_path
 
 user_id = None  # 定义一个全局变量来存储用户ID

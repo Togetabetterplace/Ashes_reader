@@ -8,7 +8,7 @@ from utils.arXiv_search import arxiv_search
 from utils.projectIO_utils import get_all_files_in_folder
 from main import get_user_info, register, login, select_paths_handler
 from gr_funcs import select_conversation, create_new_conversation
-from main import update_prj_dir  # 假设 update_prj_dir 在 main 模块中定义
+from utils.update_utils import update_prj_dir
 from config import db_path
 
 

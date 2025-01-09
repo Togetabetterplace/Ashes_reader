@@ -8,6 +8,7 @@ from llms.Llama_init import Llama  # 导入 Llama 类
 from flask import Flask, request, jsonify
 from utils.init_database import init_db
 from config import db_path
+from utils.update_utils import update_prj_dir
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -185,16 +186,16 @@ def select_paths_handler(user_id, project_path, paper_path):
     conn.close()
     return "路径选择成功"
 
-def update_prj_dir(user_id, new_dir):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute('''
-        UPDATE users
-        SET selected_project_path = ?
-        WHERE user_id = ?
-    ''', (new_dir, user_id))
-    conn.commit()
-    conn.close()
+# def update_prj_dir(user_id, new_dir):
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute('''
+#         UPDATE users
+#         SET selected_project_path = ?
+#         WHERE user_id = ?
+#     ''', (new_dir, user_id))
+#     conn.commit()
+#     conn.close()
 
 def upload_file_handler(file, user_id):
     if file is None:

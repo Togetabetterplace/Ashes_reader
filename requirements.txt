@@ -1,7 +1,7 @@
 arxiv
 bitsandbytes
 bm25
-fitz
+pymupdf
 flask
 googletrans
 gradio
