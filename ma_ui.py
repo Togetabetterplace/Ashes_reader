@@ -7,9 +7,8 @@ import gr_funcs
 from utils.github_search import search_github, download_repo
 from utils.arXiv_search import arxiv_search, is_arxiv_id, translate_text
 from main import register, login, get_user_info, create_conversation, get_conversation, update_prj_dir
+from config import db_path
 
-
-db_path = './DB_base/user_data.db'
 user_id = None  # 定义一个全局变量来存储用户ID
 current_conversation_id = None  # 定义一个全局变量来存储当前对话ID
 

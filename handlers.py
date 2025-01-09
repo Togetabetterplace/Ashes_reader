@@ -9,7 +9,7 @@ from utils.projectIO_utils import get_all_files_in_folder
 from main import get_user_info, register, login, select_paths_handler
 from gr_funcs import select_conversation, create_new_conversation
 from main import update_prj_dir  # 假设 update_prj_dir 在 main 模块中定义
-from ma_ui import db_path
+from config import db_path
 
 
 def bind_event_handlers(demo, llm):

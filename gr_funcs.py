@@ -14,7 +14,7 @@ import requests
 import sqlite3
 import os
 from main import update_prj_dir
-from ma_ui import db_path
+from config import db_path
 global prj_name_tb, selected_resource  # 使用全局变量
 
 

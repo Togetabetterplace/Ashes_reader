@@ -12,6 +12,8 @@ model_list = [
     'Qwen-14B-Chat-Int4',
     'Allama-8B'
 ]
+db_path = './DB_base/user_data.db'
+
 
 def init_config():
     # 创建一个配置解析器对象
