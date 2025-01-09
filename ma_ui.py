@@ -274,7 +274,11 @@ def build_ui(llm):
             update_prj_dir(user_id, selected_resource)
 
         def save_file(file, base_path):
-            file_name = file.name
+            # 检查并创建路径
+            if not os.path.exists(base_path):
+                os.makedirs(base_path)
+
+            file_name = file.filename  # 修改: 使用 file.filename 获取完整的文件路径
             file_path = file.name
 
             if file_name.endswith('.zip'):
@@ -303,7 +307,8 @@ def build_ui(llm):
             if file is None:
                 return "请选择文件或压缩包"
 
-            file_name, new_dir = save_file(file, './Cloud_base/project_base' if file.name.endswith('.zip') else './Cloud_base/paper_base')
+            base_path = './Cloud_base/project_base' if file.name.endswith('.zip') else './Cloud_base/paper_base'
+            file_name, new_dir = save_file(file, base_path)
 
             # 更新 PRJ_DIR 为新上传资源的路径
             os.environ["PRJ_DIR"] = new_dir
