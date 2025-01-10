@@ -7,7 +7,7 @@ from werkzeug.utils import secure_filename
 from utils.github_search import search_github, download_repo
 from utils.arXiv_search import arxiv_search
 from utils.projectIO_utils import get_all_files_in_folder
-from main import select_paths_handler, update_resource_choices
+from main import select_paths_handler, update_resource_choices, upload_file_handler
 from gr_funcs import select_conversation, create_new_conversation
 from utils.update_utils import update_prj_dir
 from config import db_path
@@ -20,42 +20,43 @@ from auth import login, register  # 导入 login 和 register 函数
 
 UPLOAD_FOLDER = './uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+"""
+# def upload_file_handler(file, user_id):
+#     global prj_name_tb, selected_resource
+#     if file is None or file.filename == '':
+#         return "请选择文件或压缩包"
 
-def upload_file_handler(file, user_id):
-    global prj_name_tb, selected_resource
-    if file is None or file.filename == '':
-        return "请选择文件或压缩包"
+#     filename = secure_filename(file.filename)
+#     file_path = os.path.join(UPLOAD_FOLDER, filename)
 
-    filename = secure_filename(file.filename)
-    file_path = os.path.join(UPLOAD_FOLDER, filename)
+#     if filename.endswith('.zip'):
+#         with zipfile.ZipFile(file_path, 'r') as zip_ref:
+#             zip_ref.extractall('./Cloud_base/project_base')
+#         new_dir = './Cloud_base/project_base'
+#     else:
+#         shutil.copy(file_path, './Cloud_base/paper_base')
+#         new_dir = './Cloud_base/paper_base'
 
-    if filename.endswith('.zip'):
-        with zipfile.ZipFile(file_path, 'r') as zip_ref:
-            zip_ref.extractall('./Cloud_base/project_base')
-        new_dir = './Cloud_base/project_base'
-    else:
-        shutil.copy(file_path, './Cloud_base/paper_base')
-        new_dir = './Cloud_base/paper_base'
+#     # 更新 PRJ_DIR 为新上传资源的路径
+#     os.environ["PRJ_DIR"] = new_dir
+#     prj_name_tb.update(value=new_dir)
+#     update_prj_dir(user_id, new_dir)
 
-    # 更新 PRJ_DIR 为新上传资源的路径
-    os.environ["PRJ_DIR"] = new_dir
-    prj_name_tb.update(value=new_dir)
-    update_prj_dir(user_id, new_dir)
+#     # 更新数据库新增资源
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+#     cursor.execute('''
+#         INSERT INTO user_resources (user_id, resource_name, resource_path)
+#         VALUES (?, ?, ?)
+#     ''', (user_id, filename, new_dir))
+#     conn.commit()
+#     conn.close()
 
-    # 更新数据库新增资源
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute('''
-        INSERT INTO user_resources (user_id, resource_name, resource_path)
-        VALUES (?, ?, ?)
-    ''', (user_id, filename, new_dir))
-    conn.commit()
-    conn.close()
+#     # 更新前端数据，把新的资源选项加上
+#     update_resource_choices(user_id)
 
-    # 更新前端数据，把新的资源选项加上
-    update_resource_choices(user_id)
-
-    return f"文件 {filename} 上传成功，保存在 {new_dir}"
+#     return f"文件 {filename} 上传成功，保存在 {new_dir}"
+"""
 
 def bind_event_handlers(demo, llm):
     model_selector = demo['model_selector']
@@ -242,6 +243,8 @@ def save_file(file, base_path):
 
     return file_name, new_dir
 
+
+"""
 # class DatabaseManager:
 #     def __init__(self, db_path):
 #         self.db_path = db_path
@@ -269,3 +272,4 @@ def save_file(file, base_path):
 #         conn.commit()
 #         conn.close()
 
+"""

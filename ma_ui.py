@@ -10,6 +10,7 @@ from utils.update_utils import update_prj_dir
 from config import db_path
 from services.user_service import register, login, get_user_info
 from services.conversation_service import create_conversation, get_conversation
+# from main import upload_file_handler
 import logging
 
 class UIManager:
@@ -313,8 +314,9 @@ class UIManager:
                 if file is None:
                     return "请选择文件或压缩包"
 
-                base_path = './Cloud_base/project_base' if file.name.endswith('.zip') else './Cloud_base/paper_base'
-                file_name, new_dir = self.save_file(file, base_path)
+                base_path = f'./Cloud_base/user_{user_id}/project_base' if file.name.endswith(
+                    '.zip') else f'./Cloud_base/user_{user_id}/paper_base'
+                file_name, new_dir = save_file(file, base_path)
 
                 # 更新 PRJ_DIR 为新上传资源的路径
                 os.environ["PRJ_DIR"] = new_dir
@@ -338,7 +340,7 @@ class UIManager:
                 return f"文件 {file_name} 上传成功，保存在 {new_dir}"
 
             def update_resource_choices(user_id):
-                resource_choices = self.get_user_resources(user_id)
+                resource_choices = get_user_resources(user_id)
                 selected_resource.update(choices=resource_choices)
 
             register_btn.click(fn=register_handler, inputs=[register_username, register_email, register_password], outputs=gr.Textbox())
