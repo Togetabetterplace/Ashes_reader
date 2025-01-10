@@ -49,6 +49,15 @@ def init_db():
     );
     ''')
 
+    # 创建索引
+    cursor.execute('''
+    CREATE INDEX IF NOT EXISTS idx_user_conversations_user_id ON user_conversations(user_id);
+    ''')
+
+    cursor.execute('''
+    CREATE INDEX IF NOT EXISTS idx_user_resources_user_id ON user_resources(user_id);
+    ''')
+
     # 插入初始管理员账户
     admin_password_hash = hashlib.sha256('admin_password'.encode()).hexdigest()
     cursor.execute('''

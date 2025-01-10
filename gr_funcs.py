@@ -1,4 +1,5 @@
 # gr_funcs.py
+from werkzeug.utils import secure_filename  # 添加
 import re
 import time
 import json
@@ -12,10 +13,42 @@ import config
 import shutil
 import requests
 import sqlite3
+import zipfile
 import os
 from main import update_prj_dir
 from config import db_path
-global prj_name_tb, selected_resource  # 使用全局变量
+# from handlers import DatabaseManager
+
+global prj_name_tb, selected_resource
+
+
+class DatabaseManager:
+    def __init__(self, db_path):
+        self.db_path = db_path
+
+    def get_user_resources(self, user_id):
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute(
+            'SELECT resource_name FROM user_resources WHERE user_id = ?', (user_id,))
+        resources = cursor.fetchall()
+        conn.close()
+        return [r[0] for r in resources]
+
+    def update_resource_choices(self, user_id, selected_resource):
+        resource_choices = self.get_user_resources(user_id)
+        selected_resource.update(choices=resource_choices)
+
+    def update_conversation(self, conversation_id, new_history):
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute('''
+            UPDATE user_conversations
+            SET conversation_history = ?, updated_at = CURRENT_TIMESTAMP
+            WHERE conversation_id = ?
+        ''', (new_history, conversation_id))
+        conn.commit()
+        conn.close()
 
 
 def analyse_project(prj_path, progress=gr.Progress()):
@@ -288,29 +321,53 @@ def get_conversation(conversation_id):
         return None
 
 def select_conversation(conversation_list):
-    # 假设 conversation_list 是一个包含对话对象的列表
     selected_conversation = conversation_list.selected_item  # 根据实际逻辑获取选中的对话
     return selected_conversation.history  # 返回选中对话的历史记录
+
+
+def clean_tmp_directory(tmp_path='./Cloud_base/tmp/'):
+    try:
+        # 确保 tmp 文件夹存在
+        if not os.path.exists(tmp_path):
+            os.makedirs(tmp_path)
+            logging.info(f"Created tmp directory: {tmp_path}")
+            return
+        
+        # 获取 tmp 文件夹中的所有文件和子目录
+        for item in os.listdir(tmp_path):
+            item_path = os.path.join(tmp_path, item)
+            try:
+                if os.path.isfile(item_path) or os.path.islink(item_path):
+                    os.unlink(item_path)  # 删除文件或符号链接
+                elif os.path.isdir(item_path):
+                    shutil.rmtree(item_path)  # 递归删除子目录及其内容
+            except Exception as e:
+                logging.error(f"Error deleting {item_path}: {e}")
+
+        logging.info("Temporary files cleaned successfully.")
+    except Exception as e:
+        logging.error(f"Error cleaning tmp directory: {e}")
+        raise
 
 def upload_file_handler(file, user_id, selected_resource):
     if file is None:
         return "请选择文件或压缩包"
-
-    file_name = file.name
-    file_path = file.name
+    cloud_path = f'./Cloud_base/tmp'
+    file_name = secure_filename(file.filename)
+    file_path = os.path.join(cloud_path, file_name)
+    file.save(file_path)
 
     if file_name.endswith('.zip'):
-        # 解压压缩包
-        import zipfile
         with zipfile.ZipFile(file_path, 'r') as zip_ref:
-            zip_ref.extractall('./Cloud_base/project_base')
-        new_dir = './Cloud_base/project_base'
+            zip_ref.extractall(f'./Cloud_base/user_{user_id}/project_base')
+        new_dir = f'./Cloud_base/user_{user_id}/project_base'
     else:
-        # 保存单个文件
-        import shutil
-        shutil.copy(file_path, './Cloud_base/paper_base')
-        new_dir = './Cloud_base/paper_base'
-
+        shutil.copy(file_path, f'./Cloud_base/user_{user_id}/paper_base')
+        new_dir = f'./Cloud_base/user_{user_id}/paper_base'
+        
+    # 删除tmp的临时文件,保留tmp文件夹
+    clean_tmp_directory()
+    
     # 更新 PRJ_DIR 为新上传资源的路径
     os.environ["PRJ_DIR"] = new_dir
     prj_name_tb.update(value=new_dir)
@@ -327,15 +384,7 @@ def upload_file_handler(file, user_id, selected_resource):
     conn.close()
 
     # 更新前端数据，把新的资源选项加上
-    update_resource_choices(selected_resource, user_id)
+    selected_resource.update(choices=DatabaseManager(db_path).get_user_resources(user_id))
 
     return f"文件 {file_name} 上传成功，保存在 {new_dir}"
 
-def update_resource_choices(user_id):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute('SELECT resource_name FROM user_resources WHERE user_id = ?', (user_id,))
-    resources = cursor.fetchall()
-    conn.close()
-    resource_choices = [r[0] for r in resources]
-    selected_resource.update(choices=resource_choices)

@@ -3,59 +3,68 @@ from config import db_path
 import hashlib
 import os
 from utils.update_utils import update_prj_dir
+import bcrypt
+import logging
 
 
 def register(username, password, email):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
+    try:
+        hashed_password = bcrypt.hashpw(password.encode(), bcrypt.gensalt())
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
 
-    # 检查用户名和邮箱是否已存在
-    cursor.execute(
-        'SELECT * FROM users WHERE username=? OR email=?', (username, email))
-    if cursor.fetchone():
+        # 检查用户名和邮箱是否已存在
+        cursor.execute(
+            'SELECT * FROM users WHERE username=? OR email=?', (username, email))
+        if cursor.fetchone():
+            conn.close()
+            return False, "用户名或邮箱已存在"
+
+        # 生成用户ID
+        cursor.execute('INSERT INTO users (username, password, email, cloud_storage_path) VALUES (?, ?, ?, ?)',
+                       (username, hashed_password, email, ''))
+        user_id = cursor.lastrowid
+
+        # 创建用户云库目录
+        cloud_storage_path = f'./Cloud_base/{user_id}'
+        os.makedirs(cloud_storage_path, exist_ok=True)
+        cursor.execute('UPDATE users SET cloud_storage_path = ? WHERE user_id = ?',
+                       (cloud_storage_path, user_id))
+
+        conn.commit()
         conn.close()
-        return False, "用户名或邮箱已存在"
-
-    # 生成用户ID
-    cursor.execute('INSERT INTO users (username, password, email, cloud_storage_path) VALUES (?, ?, ?, ?)',
-                   (username, hashlib.sha256(password.encode()).hexdigest(), email, ''))
-    user_id = cursor.lastrowid
-
-    # 创建用户云库目录
-    cloud_storage_path = f'./Cloud_base/{user_id}'
-    os.makedirs(cloud_storage_path, exist_ok=True)
-    cursor.execute('UPDATE users SET cloud_storage_path = ? WHERE user_id = ?',
-                   (cloud_storage_path, user_id))
-
-    conn.commit()
-    conn.close()
-    return True, "注册成功"
-
+        return True, "注册成功"
+    except Exception as e:
+        logging.error(f"注册失败: {e}")
+        return False, f"注册失败: {e}"
 
 def login(username, password):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
+    try:
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
 
-    # 检查用户名和密码
-    cursor.execute('SELECT * FROM users WHERE username=? AND password=?',
-                   (username, hashlib.sha256(password.encode()).hexdigest()))
-    user = cursor.fetchone()
+        # 检查用户名和密码
+        cursor.execute('SELECT * FROM users WHERE username=? AND password=?',
+                       (username, bcrypt.hashpw(password.encode(), bcrypt.gensalt())))
+        user = cursor.fetchone()
 
-    if user:
-        user_id = user[0]
-        cloud_storage_path = user[4]
-        conn.close()
-        return True, user_id, cloud_storage_path
-    else:
-        conn.close()
-        return False, "用户名或密码错误"
-
+        if user:
+            user_id = user[0]
+            cloud_storage_path = user[4]
+            conn.close()
+            return True, user_id, cloud_storage_path
+        else:
+            conn.close()
+            return False, "用户名或密码错误"
+    except Exception as e:
+        logging.error(f"登录失败: {e}")
+        return False, f"登录失败: {e}"
 
 def get_user_info(user_id):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-
     try:
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+
         # 获取用户信息
         cursor.execute('SELECT * FROM users WHERE user_id=?', (user_id,))
         user = cursor.fetchone()
@@ -90,6 +99,6 @@ def get_user_info(user_id):
             conn.close()
             return None
     except Exception as e:
+        logging.error(f"Error retrieving user info: {e}")
         conn.close()
-        print(f"Error retrieving user info: {e}")
         return None
