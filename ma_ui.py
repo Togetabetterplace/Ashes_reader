@@ -19,7 +19,7 @@ class UIManager:
         self.selected_resource = None
         self.conversation_list = None
         self.conversation_history = None
-        self.user_id = None
+        self.user_id = None  # 定义 user_id 组件
         self.current_conversation_id = None
 
     def build_ui(self, llm):
@@ -214,19 +214,18 @@ class UIManager:
                 return message
 
             def login_handler(username, password):
-                global user_id 
-                success, user_id, cloud_storage_path = login(username, password)
+                success, self.user_id, cloud_storage_path = login(username, password)
                 if success:
-                    user_info = get_user_info(user_id)
-                    self.update_conversation_list(user_id)
+                    user_info = get_user_info(self.user_id)
+                    self.update_conversation_list(self.user_id)
                     # 更新 PRJ_DIR 为云库路径
                     os.environ["PRJ_DIR"] = cloud_storage_path
                     self.prj_name_tb.update(value=cloud_storage_path)
-                    return f"登录成功，用户ID: {user_id}, 云库路径: {cloud_storage_path}", user_info
+                    return f"登录成功，用户ID: {self.user_id}, 云库路径: {cloud_storage_path}", user_info
                 else:
                     return "登录失败，请检查用户名和密码", None
 
-            def update_conversation_list(user_id):
+            def update_conversation_list(self, user_id):
                 conn = sqlite3.connect(db_path)
                 cursor = conn.cursor()
                 cursor.execute('SELECT conversation_id FROM user_conversations WHERE user_id = ?', (user_id,))
@@ -245,8 +244,9 @@ class UIManager:
                 self.current_conversation_id = conversation_id
                 self.conversation_history.update(get_conversation(conversation_id))
 
-            def send_message(user_id, conversation_id, message):
-                response = send_message(conversation_id, {'message': message})
+            def send_message(self, user_id, conversation_id, message):
+                from services.conversation_service import send_message as send_message_service
+                response = send_message_service(conversation_id, {'message': message})
                 self.conversation_history.update(response.json()['conversation_history'])
 
             def process_arxiv_search(query, user_id):
@@ -327,10 +327,8 @@ class UIManager:
                 import sqlite3
                 conn = sqlite3.connect(db_path)
                 cursor = conn.cursor()
-                cursor.execute('''
-                    INSERT INTO user_resources (user_id, resource_name, resource_path)
-                    VALUES (?, ?, ?)
-                ''', (user_id, file_name, new_dir))
+                cursor.execute('''INSERT INTO user_resources (user_id, resource_name, resource_path)
+                                VALUES (?, ?, ?)''', (user_id, file_name, new_dir))
                 conn.commit()
                 conn.close()
 
@@ -355,4 +353,10 @@ class UIManager:
             upload_btn.click(fn=upload_file_handler, inputs=[upload_file, demo['user_id']], outputs=gr.Textbox())
 
         demo.launch(share=False)
-        return demo
+        return {
+            'prj_name_tb': self.prj_name_tb,
+            'selected_resource': self.selected_resource,
+            'conversation_list': self.conversation_list,
+            'conversation_history': self.conversation_history,
+            'user_id': self.user_id  # 返回 user_id
+        }

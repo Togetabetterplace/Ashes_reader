@@ -20,43 +20,8 @@ from services.user_service import login, register  # 导入 login 和 register �
 
 UPLOAD_FOLDER = './uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-"""
-# def upload_file_handler(file, user_id):
-#     global prj_name_tb, selected_resource
-#     if file is None or file.filename == '':
-#         return "请选择文件或压缩包"
 
-#     filename = secure_filename(file.filename)
-#     file_path = os.path.join(UPLOAD_FOLDER, filename)
-
-#     if filename.endswith('.zip'):
-#         with zipfile.ZipFile(file_path, 'r') as zip_ref:
-#             zip_ref.extractall('./Cloud_base/project_base')
-#         new_dir = './Cloud_base/project_base'
-#     else:
-#         shutil.copy(file_path, './Cloud_base/paper_base')
-#         new_dir = './Cloud_base/paper_base'
-
-#     # 更新 PRJ_DIR 为新上传资源的路径
-#     os.environ["PRJ_DIR"] = new_dir
-#     prj_name_tb.update(value=new_dir)
-#     update_prj_dir(user_id, new_dir)
-
-#     # 更新数据库新增资源
-#     conn = sqlite3.connect(db_path)
-#     cursor = conn.cursor()
-#     cursor.execute('''
-#         INSERT INTO user_resources (user_id, resource_name, resource_path)
-#         VALUES (?, ?, ?)
-#     ''', (user_id, filename, new_dir))
-#     conn.commit()
-#     conn.close()
-
-#     # 更新前端数据，把新的资源选项加上
-#     update_resource_choices(user_id)
-
-#     return f"文件 {filename} 上传成功，保存在 {new_dir}"
-"""
+global prj_name_tb, selected_resource
 
 def bind_event_handlers(demo, llm):
     model_selector = demo['model_selector']
@@ -75,6 +40,8 @@ def bind_event_handlers(demo, llm):
     paper_path = demo['paper_path']
     select_paths_btn = demo['select_paths_btn']
     download_resource_btn = demo['download_resource_btn']
+    # 添加 user_id 引用
+    user_id = demo['user_id']
 
     model_selector.select(
         gr_funcs.model_change,
@@ -107,7 +74,7 @@ def bind_event_handlers(demo, llm):
     )
     code_cmt_btn.click(
         gr_funcs.ai_comment,
-        inputs=[demo['code_cmt_btn'], demo['prj_fe'], demo['user_id'], llm],  # 添加 user_id 和 llm
+        inputs=[demo['code_cmt_btn'], demo['prj_fe'], user_id, llm],  # 添加 user_id 和 llm
         outputs=[demo['code_cmt_btn'], demo['cmt_code']]
     )
     prj_fe.change(
@@ -117,31 +84,31 @@ def bind_event_handlers(demo, llm):
     )
     code_lang_ch_btn.click(
         gr_funcs.change_code_lang,
-        inputs=[demo['code_lang_ch_btn'], demo['raw_lang_code'], demo['to_lang'], demo['user_id'], llm],  # 添加 user_id 和 llm
+        inputs=[demo['code_lang_ch_btn'], demo['raw_lang_code'], demo['to_lang'], user_id, llm],  # 添加 user_id 和 llm
         outputs=[demo['code_lang_ch_btn'], demo['code_lang_changed_md']]
     )
     search_btn.click(
         gr_funcs.arxiv_search_func,
-        inputs=[demo['search_query'], demo['user_id']],  # 添加 user_id
+        inputs=[demo['search_query'], user_id],  # 添加 user_id
         outputs=[demo['search_results'], demo['selected_paper']]
     )
     process_paper_btn.click(
         gr_funcs.process_paper,
-        inputs=[demo['selected_paper'], demo['user_id']],  # 添加 user_id
+        inputs=[demo['selected_paper'], user_id],  # 添加 user_id
         outputs=[demo['paper_summary']]
     )
 
     # GitHub 搜索按钮点击事件
     github_search_btn.click(
         fn=gr_funcs.github_search_func,
-        inputs=[demo['github_query'], demo['user_id']],  # 添加 user_id
+        inputs=[demo['github_query'], user_id],  # 添加 user_id
         outputs=[demo['github_search_results'], demo['selected_github_repo']]
     )
 
     # 处理 GitHub 仓库按钮点击事件
     process_github_repo_btn.click(
         fn=gr_funcs.process_github_repo,
-        inputs=[demo['selected_github_repo'], demo['user_id']],  # 添加 user_id
+        inputs=[demo['selected_github_repo'], user_id],  # 添加 user_id
         outputs=[demo['repo_summary']]
     )
 
@@ -162,28 +129,28 @@ def bind_event_handlers(demo, llm):
     # 新增下载资源按钮点击事件
     download_resource_btn.click(
         fn=gr_funcs.download_resource,
-        inputs=[demo['selected_resource'],demo['user_id']],
+        inputs=[demo['selected_resource'], user_id],
         outputs=gr.Textbox()  # 或者其他合适的输出组件
     )
 
     # 选择路径按钮点击事件
     select_paths_btn.click(
         fn=select_paths_handler,
-        inputs=[demo['user_id'], project_path, paper_path],
+        inputs=[user_id, project_path, paper_path],
         outputs=gr.Textbox()
     )
 
     # 添加事件处理程序，用于选择云库中的项目路径并进行分析
     project_path.change(
         fn=lambda user_id, project_path: select_paths_handler(user_id, project_path, None),
-        inputs=[demo['user_id'], project_path],
+        inputs=[user_id, project_path],
         outputs=gr.Textbox()
     )
 
     # 添加事件处理程序，用于选择云库中的论文路径并进行分析
     paper_path.change(
         fn=lambda user_id, paper_path: select_paths_handler(user_id, None, paper_path),
-        inputs=[demo['user_id'], paper_path],
+        inputs=[user_id, paper_path],
         outputs=gr.Textbox()
     )
 
@@ -193,7 +160,7 @@ def bind_event_handlers(demo, llm):
     conversation_history = demo['conversation_history']
 
     new_conversation_btn.click(
-        fn=lambda: create_new_conversation(demo['user_id']),
+        fn=lambda: create_new_conversation(user_id),
         inputs=[],
         outputs=[conversation_list, conversation_history]
     )
@@ -243,33 +210,3 @@ def save_file(file, base_path):
 
     return file_name, new_dir
 
-
-"""
-# class DatabaseManager:
-#     def __init__(self, db_path):
-#         self.db_path = db_path
-
-#     def get_user_resources(self, user_id):
-#         conn = sqlite3.connect(self.db_path)
-#         cursor = conn.cursor()
-#         cursor.execute('SELECT resource_name FROM user_resources WHERE user_id = ?', (user_id,))
-#         resources = cursor.fetchall()
-#         conn.close()
-#         return [r[0] for r in resources]
-
-#     def update_resource_choices(self, user_id, selected_resource):
-#         resource_choices = self.get_user_resources(user_id)
-#         selected_resource.update(choices=resource_choices)
-    
-#     def update_conversation(self, conversation_id, new_history):
-#         conn = sqlite3.connect(self.db_path)
-#         cursor = conn.cursor()
-#         cursor.execute('''
-#             UPDATE user_conversations
-#             SET conversation_history = ?, updated_at = CURRENT_TIMESTAMP
-#             WHERE conversation_id = ?
-#         ''', (new_history, conversation_id))
-#         conn.commit()
-#         conn.close()
-
-"""
