@@ -15,7 +15,7 @@ from werkzeug.utils import secure_filename  # 添加
 import zipfile
 import shutil
 import services.user_service as user_service
-from auth import login, register  # 导入 login 和 register 函数
+from services.user_service import login, register  # 导入 login 和 register 函数
 
 
 UPLOAD_FOLDER = './uploads'
