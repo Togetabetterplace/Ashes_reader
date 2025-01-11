@@ -30,7 +30,7 @@ os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
 os.environ["MODELSCOPE_CACHE"] = './models/'
-MODEL_PATH = './models/OpenScholar/Llama-3.1_OpenScholar-8B'
+MODEL_PATH = './models/hub/OpenScholar/Llama-3.1_OpenScholar-8B'
 
 # 增加环境变量检查
 required_env_vars = [

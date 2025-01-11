@@ -8,7 +8,7 @@ from utils.github_search import search_github, download_repo
 from utils.arXiv_search import arxiv_search
 from utils.projectIO_utils import get_all_files_in_folder
 from utils.update_utils import select_paths_handler, update_resource_choices, upload_file_handler
-from gr_funcs import select_conversation, create_new_conversation
+from gr_funcs import select_conversation, create_new_conversation, download_resource
 from utils.update_utils import update_prj_dir
 from config import db_path
 from werkzeug.utils import secure_filename  # 添加
@@ -16,7 +16,6 @@ import zipfile
 import shutil
 import services.user_service as user_service
 from services.user_service import login, register  # 导入 login 和 register 函数
-
 
 UPLOAD_FOLDER = './uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -128,8 +127,8 @@ def bind_event_handlers(demo, llm):
 
     # 新增下载资源按钮点击事件
     download_resource_btn.click(
-        fn=gr_funcs.download_resource,
-        inputs=[demo['selected_resource'], user_id],
+        fn=download_resource,
+        inputs=[demo['selected_resource'], user_id, gr.File(label="选择下载路径")],  # 添加用户选择的路径
         outputs=gr.Textbox()  # 或者其他合适的输出组件
     )
 
@@ -187,26 +186,33 @@ def bind_event_handlers(demo, llm):
     demo.register_handler = register_handler
     demo.login_handler = login_handler
 
-
-def save_file(file, base_path):
+def save_file(file, user_id):
     # 检查并创建路径
-    if not os.path.exists(base_path):
-        os.makedirs(base_path)
+    base_path = os.path.join('./Cloud_base', f'user_{user_id}')
+    project_base_path = os.path.join(base_path, 'project_base')
+    paper_base_path = os.path.join(base_path, 'paper_base')
 
-    file_name = file.filename  # 修改: 使用 file.filename 获取完整的文件路径
-    file_path = file.name
+    os.makedirs(project_base_path, exist_ok=True)
+    os.makedirs(paper_base_path, exist_ok=True)
+
+    file_name = secure_filename(file.filename)  # 使用 secure_filename 获取安全的文件名
+    file_path = os.path.join(UPLOAD_FOLDER, file_name)
+
+    # 保存文件到 uploads 文件夹
+    file.save(file_path)
 
     if file_name.endswith('.zip'):
-        # 解压压缩包
-        import zipfile
+        # 解压压缩包到 project_base 文件夹
         with zipfile.ZipFile(file_path, 'r') as zip_ref:
-            zip_ref.extractall(base_path)
-        new_dir = base_path
+            zip_ref.extractall(project_base_path)
+        new_dir = project_base_path
     else:
-        # 保存单个文件
-        import shutil
-        shutil.copy(file_path, base_path)
-        new_dir = base_path
+        # 保存单个文件到 paper_base 文件夹
+        new_file_path = os.path.join(paper_base_path, file_name)
+        shutil.copy(file_path, new_file_path)
+        new_dir = paper_base_path
+
+    # 删除临时文件
+    os.remove(file_path)
 
     return file_name, new_dir
-

@@ -21,35 +21,6 @@ from config import db_path
 
 global prj_name_tb, selected_resource
 
-"""
-# class DatabaseManager:
-#     def __init__(self, db_path):
-#         self.db_path = db_path
-
-#     def get_user_resources(self, user_id):
-#         conn = sqlite3.connect(self.db_path)
-#         cursor = conn.cursor()
-#         cursor.execute(
-#             'SELECT resource_name FROM user_resources WHERE user_id = ?', (user_id,))
-#         resources = cursor.fetchall()
-#         conn.close()
-#         return [r[0] for r in resources]
-
-#     def update_resource_choices(self, user_id, selected_resource):
-#         resource_choices = self.get_user_resources(user_id)
-#         selected_resource.update(choices=resource_choices)
-
-#     def update_conversation(self, conversation_id, new_history):
-#         conn = sqlite3.connect(self.db_path)
-#         cursor = conn.cursor()
-#         cursor.execute('''
-#             UPDATE user_conversations
-#             SET conversation_history = ?, updated_at = CURRENT_TIMESTAMP
-#             WHERE conversation_id = ?
-#         ''', (new_history, conversation_id))
-#         conn.commit()
-#         conn.close()
-"""
 
 def analyse_project(prj_path, progress=gr.Progress()):
     """
@@ -291,9 +262,9 @@ def process_resource(selected_resource):
     resource_info = parse_resource(selected_resource)
     return resource_info
 
-def download_resource(selected_resource, user_id):
-    # 下载资源到本地
-    download_path = config.get_user_save_path(user_id, 'resources')
+
+def download_resource(selected_resource, user_id, download_path):
+    # 下载资源到用户选择的本地路径
     resource_name = os.path.basename(selected_resource)
     local_path = os.path.join(download_path, resource_name)
     try:
