@@ -30,7 +30,7 @@ os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
 os.environ["MODELSCOPE_CACHE"] = './models/'
-MODEL_PATH = './models/hub/OpenScholar/Llama-3.1_OpenScholar-8B'
+MODEL_PATH = './models/hub/OpenScholar/Llama-3_OpenScholar-8B'
 
 # 增加环境变量检查
 required_env_vars = [
@@ -58,13 +58,17 @@ def internal_error(error):
 
 
 def load_model():
-    if os.path.exists(MODEL_PATH):
-        return joblib.load(MODEL_PATH)
-    else:
-        model_path = snapshot_download("OpenScholar/Llama-3.1_OpenScholar-8B")
+    try:
+        if os.path.exists(MODEL_PATH):
+            model_path = MODEL_PATH
+        else:
+            model_path = snapshot_download("OpenScholar/Llama-3_OpenScholar-8B")
         llm = Llama(model_name='Llama', model_path=model_path)
-        joblib.dump(llm, MODEL_PATH)
         return llm
+    except Exception as e:
+        logger.error(f"加载模型时发生错误: {e}")
+        raise
+
 
 def main():
     try:
@@ -84,6 +88,7 @@ def main():
     except Exception as e:
         logger.error(f"An error occurred: {e}")
         raise
+
 
 if __name__ == '__main__':
     try:
