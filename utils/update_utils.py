@@ -5,8 +5,7 @@ import logging
 import os
 import shutil
 import zipfile
-from werkzeug.utils import secure_filename  # 添加
-
+from werkzeug.utils import secure_filename 
 global prj_name_tb, selected_resource
 
 
@@ -39,6 +38,8 @@ class DatabaseManager:
         conn.close()
 
 
+global prj_name_tb, selected_resource
+
 def update_prj_dir(user_id, new_dir):
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
@@ -62,6 +63,7 @@ def select_paths_handler(user_id, project_path, paper_path):
     conn.commit()
     conn.close()
     return "路径选择成功"
+
 
 
 def clean_tmp_directory(tmp_path='./Cloud_base/tmp/'):
@@ -109,9 +111,30 @@ def upload_file_handler(file, user_id, selected_resource):
     clean_tmp_directory()
 
     # 更新 PRJ_DIR 为新上传资源的路径
+
+def upload_file_handler(file, user_id):
+    if file is None or file.filename == '':
+        return "请选择文件或压缩包"
+
+    file_name = file.filename
+    file_path = file.stream.read()
+
+    if file_name.endswith('.zip'):
+        import zipfile
+        with zipfile.ZipFile(file_path, 'r') as zip_ref:
+            zip_ref.extractall('./Cloud_base/project_base')
+        new_dir = './Cloud_base/project_base'
+    else:
+        file_name = os.path.basename(file_name)  # 确保只使用文件名部分
+        with open(file_path, 'rb') as source_file:
+            content = source_file.read()
+        with open(os.path.join('./Cloud_base/paper_base', file_name), 'wb') as f:
+            f.write(content)
+        new_dir = './Cloud_base/paper_base'
     os.environ["PRJ_DIR"] = new_dir
     prj_name_tb.update(value=new_dir)
     update_prj_dir(user_id, new_dir)
+
 
     # 更新数据库新增资源
     conn = sqlite3.connect(db_path)
@@ -126,7 +149,7 @@ def upload_file_handler(file, user_id, selected_resource):
     # 更新前端数据，把新的资源选项加上
     selected_resource.update(choices=DatabaseManager(
         db_path).get_user_resources(user_id))
-
+    update_resource_choices(user_id)
     return f"文件 {file_name} 上传成功，保存在 {new_dir}"
 
 

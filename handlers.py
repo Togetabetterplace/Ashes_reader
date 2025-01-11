@@ -20,43 +20,6 @@ from services.user_service import login, register  # 导入 login 和 register �
 
 UPLOAD_FOLDER = './uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-"""
-# def upload_file_handler(file, user_id):
-#     global prj_name_tb, selected_resource
-#     if file is None or file.filename == '':
-#         return "请选择文件或压缩包"
-
-#     filename = secure_filename(file.filename)
-#     file_path = os.path.join(UPLOAD_FOLDER, filename)
-
-#     if filename.endswith('.zip'):
-#         with zipfile.ZipFile(file_path, 'r') as zip_ref:
-#             zip_ref.extractall('./Cloud_base/project_base')
-#         new_dir = './Cloud_base/project_base'
-#     else:
-#         shutil.copy(file_path, './Cloud_base/paper_base')
-#         new_dir = './Cloud_base/paper_base'
-
-#     # 更新 PRJ_DIR 为新上传资源的路径
-#     os.environ["PRJ_DIR"] = new_dir
-#     prj_name_tb.update(value=new_dir)
-#     update_prj_dir(user_id, new_dir)
-
-#     # 更新数据库新增资源
-#     conn = sqlite3.connect(db_path)
-#     cursor = conn.cursor()
-#     cursor.execute('''
-#         INSERT INTO user_resources (user_id, resource_name, resource_path)
-#         VALUES (?, ?, ?)
-#     ''', (user_id, filename, new_dir))
-#     conn.commit()
-#     conn.close()
-
-#     # 更新前端数据，把新的资源选项加上
-#     update_resource_choices(user_id)
-
-#     return f"文件 {filename} 上传成功，保存在 {new_dir}"
-"""
 
 def bind_event_handlers(demo, llm):
     model_selector = demo['model_selector']
@@ -243,33 +206,3 @@ def save_file(file, base_path):
 
     return file_name, new_dir
 
-
-"""
-# class DatabaseManager:
-#     def __init__(self, db_path):
-#         self.db_path = db_path
-
-#     def get_user_resources(self, user_id):
-#         conn = sqlite3.connect(self.db_path)
-#         cursor = conn.cursor()
-#         cursor.execute('SELECT resource_name FROM user_resources WHERE user_id = ?', (user_id,))
-#         resources = cursor.fetchall()
-#         conn.close()
-#         return [r[0] for r in resources]
-
-#     def update_resource_choices(self, user_id, selected_resource):
-#         resource_choices = self.get_user_resources(user_id)
-#         selected_resource.update(choices=resource_choices)
-    
-#     def update_conversation(self, conversation_id, new_history):
-#         conn = sqlite3.connect(self.db_path)
-#         cursor = conn.cursor()
-#         cursor.execute('''
-#             UPDATE user_conversations
-#             SET conversation_history = ?, updated_at = CURRENT_TIMESTAMP
-#             WHERE conversation_id = ?
-#         ''', (new_history, conversation_id))
-#         conn.commit()
-#         conn.close()
-
-"""
