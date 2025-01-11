@@ -69,3 +69,12 @@ def send_message(conversation_id):
     else:
         conn.close()
         return jsonify({'error': '对话不存在'}), 404
+
+
+def update_conversation(conversation_id, new_history):
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute('''UPDATE user_conversations SET conversation_history = ?, updated_at = CURRENT_TIMESTAMP WHERE conversation_id = ?''',
+                   (new_history, conversation_id))
+    conn.commit()
+    conn.close()

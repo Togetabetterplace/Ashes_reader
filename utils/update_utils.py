@@ -38,7 +38,7 @@ class DatabaseManager:
         conn.close()
 
 
-global prj_name_tb, selected_resource
+# global prj_name_tb, selected_resource
 
 def update_prj_dir(user_id, new_dir):
     conn = sqlite3.connect(db_path)
