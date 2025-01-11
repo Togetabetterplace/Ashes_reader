@@ -1,6 +1,6 @@
 # ma_ui.py
 import gradio as gr
-from gr_funcs import bind_event_handlers
+from handlers import bind_event_handlers
 from llms.Llama_init import Llama
 
 class UIManager:
