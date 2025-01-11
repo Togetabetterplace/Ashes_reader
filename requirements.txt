@@ -16,3 +16,4 @@ scipy
 tqdm
 transformers
 vllm
+bcrypt
