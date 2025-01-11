@@ -45,7 +45,10 @@ class UIManager:
 
             with gr.Row():
                 prj_fe = gr.FileExplorer(
-                    label='项目文件', root=os.environ["PRJ_DIR"], file_count='single', scale=1)
+                    label='项目文件',
+                    file_count='single',
+                    scale=1
+                )
 
             with gr.Accordion('用户注册', open=False):
                 with gr.Row():
@@ -358,5 +361,5 @@ class UIManager:
             'selected_resource': self.selected_resource,
             'conversation_list': self.conversation_list,
             'conversation_history': self.conversation_history,
-            'user_id': self.user_id  # 返回 user_id
+            'user_id': self.user_id
         }
