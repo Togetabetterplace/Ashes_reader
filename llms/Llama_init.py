@@ -3,14 +3,14 @@
 from modelscope import AutoTokenizer
 from vllm import LLM, SamplingParams
 
-class LLM:
+class LLM_init:
     def __init__(self, model_name):
         self.model_name = model_name
 
     def request(self, sys_prompt, user_prompt: list, stream=False):
         pass
 
-class Llama(LLM):
+class Llama(LLM_init):
     def __init__(self, model_name,model_path=None):
         super().__init__(model_name)
 

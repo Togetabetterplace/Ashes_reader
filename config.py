@@ -10,7 +10,7 @@ model_list = [
     'Qwen-14B-Chat',
     'Qwen-14B-Chat-Int8',
     'Qwen-14B-Chat-Int4',
-    'Allama-8B'
+    'Llama'
 ]
 db_path = './DB_base/user_data.db'
 
