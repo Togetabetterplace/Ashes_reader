@@ -15,7 +15,7 @@ import requests
 import sqlite3
 import zipfile
 import os
-from main import update_prj_dir
+from utils.update_utils import update_prj_dir
 from config import db_path
 # from handlers import DatabaseManager
 

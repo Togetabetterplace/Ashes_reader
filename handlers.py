@@ -7,7 +7,7 @@ from werkzeug.utils import secure_filename
 from utils.github_search import search_github, download_repo
 from utils.arXiv_search import arxiv_search
 from utils.projectIO_utils import get_all_files_in_folder
-from main import select_paths_handler, update_resource_choices, upload_file_handler
+from utils.update_utils import select_paths_handler, update_resource_choices, upload_file_handler
 from gr_funcs import select_conversation, create_new_conversation
 from utils.update_utils import update_prj_dir
 from config import db_path
