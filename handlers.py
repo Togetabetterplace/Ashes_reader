@@ -22,27 +22,46 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 global prj_name_tb, selected_resource
 
-def bind_event_handlers(demo, llm):
+
+def bind_event_handlers(demo, llm, model_selector, dir_submit_btn, prj_fe, prj_chat_btn, code_cmt_btn, code_lang_ch_btn,
+                        search_btn, process_paper_btn, github_search_btn, process_github_repo_btn, resource_search_btn, process_resource_btn,
+                        project_path, paper_path, select_paths_btn, download_resource_btn, new_conversation_btn, conversation_list, conversation_history):
     # 使用 demo.select() 方法来获取组件
-    model_selector = demo.select(lambda x: x, inputs=None, outputs=None).component
-    dir_submit_btn = demo.select(lambda x: x, inputs=None, outputs=None).component
+    model_selector = demo.select(
+        lambda x: x, inputs=None, outputs=None).component
+    dir_submit_btn = demo.select(
+        lambda x: x, inputs=None, outputs=None).component
     prj_fe = demo.select(lambda x: x, inputs=None, outputs=None).component
-    prj_chat_btn = demo.select(lambda x: x, inputs=None, outputs=None).component
-    code_cmt_btn = demo.select(lambda x: x, inputs=None, outputs=None).component
-    code_lang_ch_btn = demo.select(lambda x: x, inputs=None, outputs=None).component
+    prj_chat_btn = demo.select(
+        lambda x: x, inputs=None, outputs=None).component
+    code_cmt_btn = demo.select(
+        lambda x: x, inputs=None, outputs=None).component
+    code_lang_ch_btn = demo.select(
+        lambda x: x, inputs=None, outputs=None).component
     search_btn = demo.select(lambda x: x, inputs=None, outputs=None).component
-    process_paper_btn = demo.select(lambda x: x, inputs=None, outputs=None).component
-    github_search_btn = demo.select(lambda x: x, inputs=None, outputs=None).component
-    process_github_repo_btn = demo.select(lambda x: x, inputs=None, outputs=None).component
-    resource_search_btn = demo.select(lambda x: x, inputs=None, outputs=None).component
-    process_resource_btn = demo.select(lambda x: x, inputs=None, outputs=None).component
-    project_path = demo.select(lambda x: x, inputs=None, outputs=None).component
+    process_paper_btn = demo.select(
+        lambda x: x, inputs=None, outputs=None).component
+    github_search_btn = demo.select(
+        lambda x: x, inputs=None, outputs=None).component
+    process_github_repo_btn = demo.select(
+        lambda x: x, inputs=None, outputs=None).component
+    resource_search_btn = demo.select(
+        lambda x: x, inputs=None, outputs=None).component
+    process_resource_btn = demo.select(
+        lambda x: x, inputs=None, outputs=None).component
+    project_path = demo.select(
+        lambda x: x, inputs=None, outputs=None).component
     paper_path = demo.select(lambda x: x, inputs=None, outputs=None).component
-    select_paths_btn = demo.select(lambda x: x, inputs=None, outputs=None).component
-    download_resource_btn = demo.select(lambda x: x, inputs=None, outputs=None).component
-    new_conversation_btn = demo.select(lambda x: x, inputs=None, outputs=None).component
-    conversation_list = demo.select(lambda x: x, inputs=None, outputs=None).component
-    conversation_history = demo.select(lambda x: x, inputs=None, outputs=None).component
+    select_paths_btn = demo.select(
+        lambda x: x, inputs=None, outputs=None).component
+    download_resource_btn = demo.select(
+        lambda x: x, inputs=None, outputs=None).component
+    new_conversation_btn = demo.select(
+        lambda x: x, inputs=None, outputs=None).component
+    conversation_list = demo.select(
+        lambda x: x, inputs=None, outputs=None).component
+    conversation_history = demo.select(
+        lambda x: x, inputs=None, outputs=None).component
     user_id = demo.select(lambda x: x, inputs=None, outputs=None).component
 
     # 绑定事件处理器
@@ -77,17 +96,20 @@ def bind_event_handlers(demo, llm):
     )
     code_cmt_btn.click(
         gr_funcs.ai_comment,
-        inputs=[demo['code_cmt_btn'], demo['prj_fe'], user_id, llm],  # 添加 user_id 和 llm
+        inputs=[demo['code_cmt_btn'], demo['prj_fe'],
+                user_id, llm],  # 添加 user_id 和 llm
         outputs=[demo['code_cmt_btn'], demo['cmt_code']]
     )
     prj_fe.change(
         gr_funcs.view_raw_lang_code_file,
         inputs=[prj_fe],
-        outputs=[demo['raw_lang_code'], demo['code_lang_ch_btn'], demo['code_lang_changed_md']]
+        outputs=[demo['raw_lang_code'], demo['code_lang_ch_btn'],
+                 demo['code_lang_changed_md']]
     )
     code_lang_ch_btn.click(
         gr_funcs.change_code_lang,
-        inputs=[demo['code_lang_ch_btn'], demo['raw_lang_code'], demo['to_lang'], user_id, llm],  # 添加 user_id 和 llm
+        inputs=[demo['code_lang_ch_btn'], demo['raw_lang_code'],
+                demo['to_lang'], user_id, llm],  # 添加 user_id 和 llm
         outputs=[demo['code_lang_ch_btn'], demo['code_lang_changed_md']]
     )
     search_btn.click(
@@ -132,7 +154,8 @@ def bind_event_handlers(demo, llm):
     # 新增下载资源按钮点击事件
     download_resource_btn.click(
         fn=download_resource,
-        inputs=[demo['selected_resource'], user_id, gr.File(label="选择下载路径")],  # 添加用户选择的路径
+        inputs=[demo['selected_resource'], user_id,
+                gr.File(label="选择下载路径")],  # 添加用户选择的路径
         outputs=gr.Textbox()  # 或者其他合适的输出组件
     )
 
@@ -145,14 +168,16 @@ def bind_event_handlers(demo, llm):
 
     # 添加事件处理程序，用于选择云库中的项目路径并进行分析
     project_path.change(
-        fn=lambda user_id, project_path: select_paths_handler(user_id, project_path, None),
+        fn=lambda user_id, project_path: select_paths_handler(
+            user_id, project_path, None),
         inputs=[user_id, project_path],
         outputs=gr.Textbox()
     )
 
     # 添加事件处理程序，用于选择云库中的论文路径并进行分析
     paper_path.change(
-        fn=lambda user_id, paper_path: select_paths_handler(user_id, None, paper_path),
+        fn=lambda user_id, paper_path: select_paths_handler(
+            user_id, None, paper_path),
         inputs=[user_id, paper_path],
         outputs=gr.Textbox()
     )
@@ -185,6 +210,7 @@ def bind_event_handlers(demo, llm):
 
     demo.register_handler = register_handler
     demo.login_handler = login_handler
+
 
 def save_file(file, user_id):
     # 检查并创建路径
