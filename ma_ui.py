@@ -10,7 +10,6 @@ from utils.update_utils import update_prj_dir
 from config import db_path
 from services.user_service import register, login, get_user_info
 from services.conversation_service import create_conversation, get_conversation
-# from main import upload_file_handler
 import logging
 
 class UIManager:
@@ -209,7 +208,7 @@ class UIManager:
                     upload_btn = gr.Button('上传', variant='primary', scale=1, min_width=100)
 
             # 绑定事件处理器
-            handlers.bind_event_handlers(demo, llm)
+            handlers.bind_event_handlers(demo, llm, model_selector, dir_submit_btn, prj_fe, prj_chat_btn, code_cmt_btn, code_lang_ch_btn, search_btn, process_paper_btn, github_search_btn, process_github_repo_btn, resource_search_btn, process_resource_btn, project_path, paper_path, select_paths_btn, download_resource_btn, new_conversation_btn, self.conversation_list, self.conversation_history)
 
             # 注册和登录事件处理器
             def register_handler(username, email, password):

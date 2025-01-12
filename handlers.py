@@ -23,25 +23,29 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 global prj_name_tb, selected_resource
 
 def bind_event_handlers(demo, llm):
-    model_selector = demo['model_selector']
-    dir_submit_btn = demo['dir_submit_btn']
-    prj_fe = demo['prj_fe']
-    prj_chat_btn = demo['prj_chat_btn']
-    code_cmt_btn = demo['code_cmt_btn']
-    code_lang_ch_btn = demo['code_lang_ch_btn']
-    search_btn = demo['search_btn']
-    process_paper_btn = demo['process_paper_btn']
-    github_search_btn = demo['github_search_btn']
-    process_github_repo_btn = demo['process_github_repo_btn']
-    resource_search_btn = demo['resource_search_btn']
-    process_resource_btn = demo['process_resource_btn']
-    project_path = demo['project_path']
-    paper_path = demo['paper_path']
-    select_paths_btn = demo['select_paths_btn']
-    download_resource_btn = demo['download_resource_btn']
-    # 添加 user_id 引用
-    user_id = demo['user_id']
+    # 使用 demo.select() 方法来获取组件
+    model_selector = demo.select(lambda x: x, inputs=None, outputs=None).component
+    dir_submit_btn = demo.select(lambda x: x, inputs=None, outputs=None).component
+    prj_fe = demo.select(lambda x: x, inputs=None, outputs=None).component
+    prj_chat_btn = demo.select(lambda x: x, inputs=None, outputs=None).component
+    code_cmt_btn = demo.select(lambda x: x, inputs=None, outputs=None).component
+    code_lang_ch_btn = demo.select(lambda x: x, inputs=None, outputs=None).component
+    search_btn = demo.select(lambda x: x, inputs=None, outputs=None).component
+    process_paper_btn = demo.select(lambda x: x, inputs=None, outputs=None).component
+    github_search_btn = demo.select(lambda x: x, inputs=None, outputs=None).component
+    process_github_repo_btn = demo.select(lambda x: x, inputs=None, outputs=None).component
+    resource_search_btn = demo.select(lambda x: x, inputs=None, outputs=None).component
+    process_resource_btn = demo.select(lambda x: x, inputs=None, outputs=None).component
+    project_path = demo.select(lambda x: x, inputs=None, outputs=None).component
+    paper_path = demo.select(lambda x: x, inputs=None, outputs=None).component
+    select_paths_btn = demo.select(lambda x: x, inputs=None, outputs=None).component
+    download_resource_btn = demo.select(lambda x: x, inputs=None, outputs=None).component
+    new_conversation_btn = demo.select(lambda x: x, inputs=None, outputs=None).component
+    conversation_list = demo.select(lambda x: x, inputs=None, outputs=None).component
+    conversation_history = demo.select(lambda x: x, inputs=None, outputs=None).component
+    user_id = demo.select(lambda x: x, inputs=None, outputs=None).component
 
+    # 绑定事件处理器
     model_selector.select(
         gr_funcs.model_change,
         inputs=[model_selector],
@@ -154,10 +158,6 @@ def bind_event_handlers(demo, llm):
     )
 
     # 新增新建对话按钮点击事件
-    new_conversation_btn = demo['new_conversation_btn']
-    conversation_list = demo['conversation_list']
-    conversation_history = demo['conversation_history']
-
     new_conversation_btn.click(
         fn=lambda: create_new_conversation(user_id),
         inputs=[],
