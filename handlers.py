@@ -1,4 +1,3 @@
-# handlers.py
 import gr_funcs
 import gradio as gr
 import sqlite3
@@ -11,11 +10,9 @@ from utils.update_utils import select_paths_handler, update_resource_choices, up
 from gr_funcs import select_conversation, create_new_conversation, download_resource
 from utils.update_utils import update_prj_dir
 from config import db_path
-from werkzeug.utils import secure_filename  # 添加
 import zipfile
 import shutil
 import services.user_service as user_service
-from services.user_service import login, register  # 导入 login 和 register 函数
 
 UPLOAD_FOLDER = './uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -26,43 +23,32 @@ global prj_name_tb, selected_resource
 def bind_event_handlers(demo, llm, model_selector, dir_submit_btn, prj_fe, prj_chat_btn, code_cmt_btn, code_lang_ch_btn,
                         search_btn, process_paper_btn, github_search_btn, process_github_repo_btn, resource_search_btn, process_resource_btn,
                         project_path, paper_path, select_paths_btn, download_resource_btn, new_conversation_btn, conversation_list, conversation_history):
-    # 使用 demo.select() 方法来获取组件
-    model_selector = demo.select(
-        lambda x: x, inputs=None, outputs=None).component
-    dir_submit_btn = demo.select(
-        lambda x: x, inputs=None, outputs=None).component
-    prj_fe = demo.select(lambda x: x, inputs=None, outputs=None).component
-    prj_chat_btn = demo.select(
-        lambda x: x, inputs=None, outputs=None).component
-    code_cmt_btn = demo.select(
-        lambda x: x, inputs=None, outputs=None).component
-    code_lang_ch_btn = demo.select(
-        lambda x: x, inputs=None, outputs=None).component
-    search_btn = demo.select(lambda x: x, inputs=None, outputs=None).component
-    process_paper_btn = demo.select(
-        lambda x: x, inputs=None, outputs=None).component
-    github_search_btn = demo.select(
-        lambda x: x, inputs=None, outputs=None).component
-    process_github_repo_btn = demo.select(
-        lambda x: x, inputs=None, outputs=None).component
-    resource_search_btn = demo.select(
-        lambda x: x, inputs=None, outputs=None).component
-    process_resource_btn = demo.select(
-        lambda x: x, inputs=None, outputs=None).component
-    project_path = demo.select(
-        lambda x: x, inputs=None, outputs=None).component
-    paper_path = demo.select(lambda x: x, inputs=None, outputs=None).component
-    select_paths_btn = demo.select(
-        lambda x: x, inputs=None, outputs=None).component
-    download_resource_btn = demo.select(
-        lambda x: x, inputs=None, outputs=None).component
-    new_conversation_btn = demo.select(
-        lambda x: x, inputs=None, outputs=None).component
-    conversation_list = demo.select(
-        lambda x: x, inputs=None, outputs=None).component
-    conversation_history = demo.select(
-        lambda x: x, inputs=None, outputs=None).component
-    user_id = demo.select(lambda x: x, inputs=None, outputs=None).component
+    # 获取组件
+    model_selector = demo.get_component("model_selector")  # 根据实际组件名称修改
+    dir_submit_btn = demo.get_component("dir_submit_btn")  # 根据实际组件名称修改
+    prj_fe = demo.get_component("prj_fe")  # 根据实际组件名称修改
+    prj_chat_btn = demo.get_component("prj_chat_btn")  # 根据实际组件名称修改
+    code_cmt_btn = demo.get_component("code_cmt_btn")  # 根据实际组件名称修改
+    code_lang_ch_btn = demo.get_component("code_lang_ch_btn")  # 根据实际组件名称修改
+    search_btn = demo.get_component("search_btn")  # 根据实际组件名称修改
+    process_paper_btn = demo.get_component("process_paper_btn")  # 根据实际组件名称修改
+    github_search_btn = demo.get_component("github_search_btn")  # 根据实际组件名称修改
+    process_github_repo_btn = demo.get_component(
+        "process_github_repo_btn")  # 根据实际组件名称修改
+    resource_search_btn = demo.get_component(
+        "resource_search_btn")  # 根据实际组件名称修改
+    process_resource_btn = demo.get_component(
+        "process_resource_btn")  # 根据实际组件名称修改
+    project_path = demo.get_component("project_path")  # 根据实际组件名称修改
+    paper_path = demo.get_component("paper_path")  # 根据实际组件名称修改
+    select_paths_btn = demo.get_component("select_paths_btn")  # 根据实际组件名称修改
+    download_resource_btn = demo.get_component(
+        "download_resource_btn")  # 根据实际组件名称修改
+    new_conversation_btn = demo.get_component(
+        "new_conversation_btn")  # 根据实际组件名称修改
+    conversation_list = demo.get_component("conversation_list")  # 根据实际组件名称修改
+    conversation_history = demo.get_component(
+        "conversation_history")  # 根据实际组件名称修改
 
     # 绑定事件处理器
     model_selector.select(
@@ -72,97 +58,109 @@ def bind_event_handlers(demo, llm, model_selector, dir_submit_btn, prj_fe, prj_c
     )
     dir_submit_btn.click(
         gr_funcs.analyse_project,
-        inputs=[demo['prj_name_tb']],
-        outputs=[demo['label']]
+        inputs=[demo.get("prj_name_tb")],  # 使用 get 方法获取组件值
+        outputs=[demo.get("label")]  # 使用 get 方法获取组件值
     )
     prj_fe.change(
         gr_funcs.view_prj_file,
         inputs=[prj_fe],
-        outputs=[demo['code'], demo['gpt_label'], demo['gpt_md']]
+        outputs=[demo.get("code"), demo.get("gpt_label"),
+                 demo.get("gpt_md")]  # 使用 get 方法获取组件值
     )
     prj_chat_btn.click(
         gr_funcs.prj_chat,
-        inputs=[demo['prj_chat_txt'], demo['prj_chatbot'], llm],  # 传递 llm 参数
-        outputs=[demo['prj_chatbot']]
+        inputs=[demo.get("prj_chat_txt"), demo.get(
+            "prj_chatbot"), llm],  # 传递 llm 参数
+        outputs=[demo.get("prj_chatbot")]  # 使用 get 方法获取组件值
     )
     prj_chat_btn.click(
         gr_funcs.clear_textbox,
-        outputs=demo['prj_chat_txt']
+        outputs=demo.get("prj_chat_txt")  # 使用 get 方法获取组件值
     )
     prj_fe.change(
         gr_funcs.view_uncmt_file,
         inputs=[prj_fe],
-        outputs=[demo['uncmt_code'], demo['code_cmt_btn'], demo['cmt_code']]
+        outputs=[demo.get("uncmt_code"), demo.get(
+            "code_cmt_btn"), demo.get("cmt_code")]  # 使用 get 方法获取组件值
     )
     code_cmt_btn.click(
         gr_funcs.ai_comment,
-        inputs=[demo['code_cmt_btn'], demo['prj_fe'],
-                user_id, llm],  # 添加 user_id 和 llm
-        outputs=[demo['code_cmt_btn'], demo['cmt_code']]
+        inputs=[demo.get("code_cmt_btn"), demo.get("prj_fe"),
+                user_service.get_user_id(), llm],  # 获取用户 ID 并传递 llm
+        outputs=[demo.get("code_cmt_btn"), demo.get(
+            "cmt_code")]  # 使用 get 方法获取组件值
     )
     prj_fe.change(
         gr_funcs.view_raw_lang_code_file,
         inputs=[prj_fe],
-        outputs=[demo['raw_lang_code'], demo['code_lang_ch_btn'],
-                 demo['code_lang_changed_md']]
+        outputs=[demo.get("raw_lang_code"), demo.get("code_lang_ch_btn"), demo.get(
+            "code_lang_changed_md")]  # 使用 get 方法获取组件值
     )
     code_lang_ch_btn.click(
         gr_funcs.change_code_lang,
-        inputs=[demo['code_lang_ch_btn'], demo['raw_lang_code'],
-                demo['to_lang'], user_id, llm],  # 添加 user_id 和 llm
-        outputs=[demo['code_lang_ch_btn'], demo['code_lang_changed_md']]
+        inputs=[demo.get("code_lang_ch_btn"), demo.get("raw_lang_code"), demo.get(
+            "to_lang"), user_service.get_user_id(), llm],  # 获取用户 ID 并传递 llm
+        outputs=[demo.get("code_lang_ch_btn"), demo.get(
+            "code_lang_changed_md")]  # 使用 get 方法获取组件值
     )
     search_btn.click(
         gr_funcs.arxiv_search_func,
-        inputs=[demo['search_query'], user_id],  # 添加 user_id
-        outputs=[demo['search_results'], demo['selected_paper']]
+        inputs=[demo.get("search_query"),
+                user_service.get_user_id()],  # 获取用户 ID
+        outputs=[demo.get("search_results"), demo.get(
+            "selected_paper")]  # 使用 get 方法获取组件值
     )
     process_paper_btn.click(
         gr_funcs.process_paper,
-        inputs=[demo['selected_paper'], user_id],  # 添加 user_id
-        outputs=[demo['paper_summary']]
+        inputs=[demo.get("selected_paper"),
+                user_service.get_user_id()],  # 获取用户 ID
+        outputs=[demo.get("paper_summary")]  # 使用 get 方法获取组件值
     )
 
     # GitHub 搜索按钮点击事件
     github_search_btn.click(
         fn=gr_funcs.github_search_func,
-        inputs=[demo['github_query'], user_id],  # 添加 user_id
-        outputs=[demo['github_search_results'], demo['selected_github_repo']]
+        inputs=[demo.get("github_query"),
+                user_service.get_user_id()],  # 获取用户 ID
+        outputs=[demo.get("github_search_results"), demo.get(
+            "selected_github_repo")]  # 使用 get 方法获取组件值
     )
 
     # 处理 GitHub 仓库按钮点击事件
     process_github_repo_btn.click(
         fn=gr_funcs.process_github_repo,
-        inputs=[demo['selected_github_repo'], user_id],  # 添加 user_id
-        outputs=[demo['repo_summary']]
+        inputs=[demo.get("selected_github_repo"),
+                user_service.get_user_id()],  # 获取用户 ID
+        outputs=[demo.get("repo_summary")]  # 使用 get 方法获取组件值
     )
 
     # 资源搜索按钮点击事件
     resource_search_btn.click(
         fn=gr_funcs.search_resource,
-        inputs=[demo['resource_query']],
-        outputs=[demo['resource_search_results'], demo['selected_resource']]
+        inputs=[demo.get("resource_query")],
+        outputs=[demo.get("resource_search_results"), demo.get(
+            "selected_resource")]  # 使用 get 方法获取组件值
     )
 
     # 处理资源按钮点击事件
     process_resource_btn.click(
         fn=gr_funcs.process_resource,
-        inputs=[demo['selected_resource']],
-        outputs=[demo['resource_summary']]
+        inputs=[demo.get("selected_resource")],
+        outputs=[demo.get("resource_summary")]  # 使用 get 方法获取组件值
     )
 
     # 新增下载资源按钮点击事件
     download_resource_btn.click(
         fn=download_resource,
-        inputs=[demo['selected_resource'], user_id,
-                gr.File(label="选择下载路径")],  # 添加用户选择的路径
+        inputs=[demo.get("selected_resource"), user_service.get_user_id(), gr.File(
+            label="选择下载路径")],  # 添加用户选择的路径
         outputs=gr.Textbox()  # 或者其他合适的输出组件
     )
 
     # 选择路径按钮点击事件
     select_paths_btn.click(
         fn=select_paths_handler,
-        inputs=[user_id, project_path, paper_path],
+        inputs=[user_service.get_user_id(), project_path, paper_path],
         outputs=gr.Textbox()
     )
 
@@ -170,7 +168,7 @@ def bind_event_handlers(demo, llm, model_selector, dir_submit_btn, prj_fe, prj_c
     project_path.change(
         fn=lambda user_id, project_path: select_paths_handler(
             user_id, project_path, None),
-        inputs=[user_id, project_path],
+        inputs=[user_service.get_user_id(), project_path],
         outputs=gr.Textbox()
     )
 
@@ -178,13 +176,13 @@ def bind_event_handlers(demo, llm, model_selector, dir_submit_btn, prj_fe, prj_c
     paper_path.change(
         fn=lambda user_id, paper_path: select_paths_handler(
             user_id, None, paper_path),
-        inputs=[user_id, paper_path],
+        inputs=[user_service.get_user_id(), paper_path],
         outputs=gr.Textbox()
     )
 
     # 新增新建对话按钮点击事件
     new_conversation_btn.click(
-        fn=lambda: create_new_conversation(user_id),
+        fn=lambda: create_new_conversation(user_service.get_user_id()),
         inputs=[],
         outputs=[conversation_list, conversation_history]
     )
@@ -197,11 +195,12 @@ def bind_event_handlers(demo, llm, model_selector, dir_submit_btn, prj_fe, prj_c
     )
 
     def register_handler(username, email, password):
-        success, message = register(username, password, email)
+        success, message = user_service.register(username, password, email)
         return message
 
     def login_handler(username, password):
-        success, user_id, cloud_storage_path = login(username, password)
+        success, user_id, cloud_storage_path = user_service.login(
+            username, password)
         if success:
             user_info = user_service.get_user_info(user_id)
             return f"登录成功，用户ID: {user_id}, 云库路径: {cloud_storage_path}", user_info
