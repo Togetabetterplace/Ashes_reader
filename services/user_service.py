@@ -102,3 +102,13 @@ def get_user_info(user_id):
         logging.error(f"Error retrieving user info: {e}")
         conn.close()
         return None
+
+# services/user_service.py
+
+def get_user_resources(user_id):
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute('SELECT resource_name FROM user_resources WHERE user_id = ?', (user_id,))
+    resources = cursor.fetchall()
+    conn.close()
+    return [resource[0] for resource in resources]

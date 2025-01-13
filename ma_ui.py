@@ -5,12 +5,13 @@ import gr_funcs
 import os
 import zipfile
 import shutil
-from utils.github_search import search_github, download_repo
-from utils.arXiv_search import arxiv_search, is_arxiv_id, translate_text
+# from utils.github_search import search_github, download_repo
+# from utils.arXiv_search import arxiv_search, is_arxiv_id, translate_text
 from utils.update_utils import update_prj_dir
-from services.user_service import register, login, get_user_info
+# from services.user_service import register, login, get_user_info
 from services.conversation_service import create_conversation, get_conversation
-from utils.update_utils import update_resource_choices, upload_file_handler, get_user_resources,select_paths_handler
+from utils.update_utils import select_paths_handler
+from services.user_service import get_user_resources
 from gr_funcs import select_conversation, create_new_conversation, download_resource
 from RAG.rag import build_rag_cache
 import services.user_service as user_service
