@@ -1,5 +1,4 @@
 # gr_funcs.py
-# from werkzeug.utils import secure_filename  # 添加
 import re
 import time
 import json
@@ -7,16 +6,13 @@ import gradio as gr
 import utils.projectIO_utils as projectIO_utils
 import gpt_server
 import utils.arXiv_search as arXiv_search
-import utils.github_search as github_search  # 导入 github_search 模块
+import utils.github_search as github_search 
 import RAG.rag as rag
 import logging
 import config
 import shutil
 import requests
-import sqlite3
-import zipfile
 import os
-from utils.update_utils import update_prj_dir
 from config import db_path
 # from handlers import DatabaseManager
 

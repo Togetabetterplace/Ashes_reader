@@ -13,9 +13,6 @@ from config import db_path
 from dotenv import load_dotenv
 from RAG.rag import rag_inference, infer_by_batch, rerank, build_rag_cache
 import logging
-import zipfile
-import shutil
-import joblib
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
