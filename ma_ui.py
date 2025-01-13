@@ -20,6 +20,7 @@ from utils.projectIO_utils import get_all_files_in_folder
 from utils.update_utils import select_paths_handler, update_resource_choices, upload_file_handler
 from gr_funcs import select_conversation, create_new_conversation, download_resource
 from utils.update_utils import update_prj_dir
+from RAG.rag import build_rag_cache
 from config import db_path
 import services.user_service as user_service
 from werkzeug.utils import secure_filename
@@ -506,6 +507,14 @@ class UIManager:
             self.prj_name_tb.update(value=selected_resource)
             update_prj_dir(self.user_id, selected_resource)
 
+    def update_rag_cache(self, user_id, new_resources_path):
+        try:
+            build_rag_cache(user_CloudBase_path=new_resources_path,
+                            cache_dir=f'./RAG_cache/user_{user_id}')
+            print(f"向量库已更新: {new_resources_path}")
+        except Exception as e:
+            logging.error(f"更新向量库失败: {e}")
+
     def upload_file_handler(self, file):
         if file is None:
             return "请选择文件或压缩包"
@@ -531,6 +540,9 @@ class UIManager:
 
             # 更新前端数据，把新的资源选项加上
             self.update_resource_choices()
+            
+            # 更新向量库
+            self.update_rag_cache(self.user_id, new_dir)
 
             return f"文件 {file_name} 上传成功，保存在 {new_dir}"
 
