@@ -30,6 +30,44 @@ class UIManager:
         self.conversation_history = None
         self.user_id = None
         self.current_conversation_id = None
+        self.label = None  # 初始化 label 组件
+        self.code = None
+        self.gpt_label = None
+        self.gpt_md = None
+        self.prj_chat_txt = None
+        self.prj_chatbot = None
+        self.uncmt_code = None
+        self.code_cmt_btn = None
+        self.cmt_code = None
+        self.raw_lang_code = None
+        self.code_lang_ch_btn = None
+        self.code_lang_changed_md = None
+        self.search_query = None
+        self.search_results = None
+        self.selected_paper = None
+        self.paper_summary = None
+        self.github_query = None
+        self.github_search_results = None
+        self.selected_github_repo = None
+        self.repo_summary = None
+        self.resource_query = None
+        self.resource_search_results = None
+        self.resource_summary = None
+        self.download_resource_btn = None
+        self.select_paths_btn = None
+        self.project_path = None
+        self.paper_path = None
+        self.register_username = None
+        self.register_email = None
+        self.register_password = None
+        self.login_username = None
+        self.login_password = None
+        self.register_btn = None
+        self.login_btn = None
+        self.dir_submit_btn = None
+        self.prj_fe = None
+        self.model_selector = None
+        self.new_conversation_btn = None
 
     def build_ui(self, llm):
         css = """
@@ -271,13 +309,12 @@ class UIManager:
             prj_fe.change(
                 gr_funcs.view_prj_file,
                 inputs=[prj_fe],
-                outputs=[ self.code,  self.gpt_label,
-                         self.gpt_md]  # 使用 get 方法获取组件值
+                outputs=[ code,  gpt_label,
+                         gpt_md]  # 使用 get 方法获取组件值
             )
             prj_chat_btn.click(
                 gr_funcs.prj_chat,
-                inputs=[ self.prj_chat_txt, demo.get(
-                    "prj_chatbot"), llm],  # 传递 llm 参数
+                inputs=[ prj_chat_txt, self.prj_chatbot, llm],  # 传递 llm 参数
                 outputs=[ self.prj_chatbot]  # 使用 get 方法获取组件值
             )
             prj_chat_btn.click(
