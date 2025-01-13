@@ -8,6 +8,7 @@ import utils.projectIO_utils as projectIO_utils
 import gpt_server
 import utils.arXiv_search as arXiv_search
 import utils.github_search as github_search  # 导入 github_search 模块
+import RAG.rag as rag
 import logging
 import config
 import shutil
@@ -19,7 +20,7 @@ from utils.update_utils import update_prj_dir
 from config import db_path
 # from handlers import DatabaseManager
 
-global prj_name_tb, selected_resource
+# global  selected_resource
 
 
 def analyse_project(prj_path, progress=gr.Progress()):

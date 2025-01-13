@@ -1,15 +1,32 @@
 import gradio as gr
-import handlers
+# import handlers
 import config
 import sqlite3
 import gr_funcs
 import os
+import user_service
+import conversation_service
+import zipfile
+import shutil
 from utils.github_search import search_github, download_repo
 from utils.arXiv_search import arxiv_search, is_arxiv_id, translate_text
 from utils.update_utils import update_prj_dir
 from services.user_service import register, login, get_user_info
 from services.conversation_service import create_conversation, get_conversation
+from utils.update_utils import update_resource_choices, upload_file_handler, get_user_resources
+from utils.github_search import search_github, download_repo
+from utils.arXiv_search import arxiv_search
+from utils.projectIO_utils import get_all_files_in_folder
+from utils.update_utils import select_paths_handler, update_resource_choices, upload_file_handler
+from gr_funcs import select_conversation, create_new_conversation, download_resource
+from utils.update_utils import update_prj_dir
+from config import db_path
+import services.user_service as user_service
+from werkzeug.utils import secure_filename
 import logging
+
+UPLOAD_FOLDER = './uploads'
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 
 class UIManager:
@@ -219,14 +236,18 @@ class UIManager:
                     upload_btn = gr.Button(
                         '上传', variant='primary', scale=1, min_width=100)
 
-            # 绑定事件处理器
-            handlers.bind_event_handlers(demo, llm, model_selector, dir_submit_btn, prj_fe, prj_chat_btn, code_cmt_btn, code_lang_ch_btn, search_btn, process_paper_btn, github_search_btn, process_github_repo_btn,
-                                         resource_search_btn, process_resource_btn, project_path, paper_path, select_paths_btn, download_resource_btn, new_conversation_btn, self.conversation_list, self.conversation_history)
+            # # 绑定事件处理器
+            # handlers.bind_event_handlers(demo, llm, model_selector, dir_submit_btn, prj_fe, prj_chat_btn,
+            #                              code_cmt_btn, code_lang_ch_btn, search_btn, process_paper_btn,
+            #                              github_search_btn, process_github_repo_btn,resource_search_btn,
+            #                              process_resource_btn, project_path, paper_path, select_paths_btn,
+            #                              download_resource_btn, new_conversation_btn, self.conversation_list,
+            #                              self.conversation_history, self.prj_name_tb)
 
             # 注册和登录事件处理器
-            register_btn.click(fn=handlers.register_handler, inputs=[
+            register_btn.click(fn=register_handler, inputs=[
                                register_username, register_email, register_password], outputs=gr.Textbox())
-            login_btn.click(fn=handlers.login_handler, inputs=[
+            login_btn.click(fn=login_handler, inputs=[
                             login_username, login_password], outputs=[gr.Textbox(), gr.JSON()])
             self.conversation_list.change(fn=lambda conversation_id: self.select_conversation(
                 conversation_id), inputs=[self.conversation_list], outputs=[self.conversation_history])
@@ -244,13 +265,176 @@ class UIManager:
             upload_btn.click(fn=lambda file: self.upload_file_handler(
                 file), inputs=[upload_file], outputs=gr.Textbox())
 
+            model_selector.select(
+                gr_funcs.model_change,
+                inputs=[model_selector],
+                outputs=[model_selector]
+            )
+            dir_submit_btn.click(
+                gr_funcs.analyse_project,
+                inputs=[self.prj_name_tb],  # 使用 get 方法获取组件值
+                outputs=[self.label]  # 使用 get 方法获取组件值
+            )
+            prj_fe.change(
+                gr_funcs.view_prj_file,
+                inputs=[prj_fe],
+                outputs=[ self.code,  self.gpt_label,
+                         self.gpt_md]  # 使用 get 方法获取组件值
+            )
+            prj_chat_btn.click(
+                gr_funcs.prj_chat,
+                inputs=[ self.prj_chat_txt, demo.get(
+                    "prj_chatbot"), llm],  # 传递 llm 参数
+                outputs=[ self.prj_chatbot]  # 使用 get 方法获取组件值
+            )
+            prj_chat_btn.click(
+                gr_funcs.clear_textbox,
+                outputs= self.prj_chat_txt  # 使用 get 方法获取组件值
+            )
+            prj_fe.change(
+                gr_funcs.view_uncmt_file,
+                inputs=[prj_fe],
+                outputs=[ self.uncmt_code, self.
+                    code_cmt_btn,  self.cmt_code]  # 使用 get 方法获取组件值
+            )
+            code_cmt_btn.click(
+                gr_funcs.ai_comment,
+                inputs=[ self.code_cmt_btn,  self.prj_fe,
+                        user_service.get_user_id(), llm],  # 获取用户 ID 并传递 llm
+                outputs=[ self.code_cmt_btn, self.cmt_code]  # 使用 get 方法获取组件值
+            )
+            prj_fe.change(
+                gr_funcs.view_raw_lang_code_file,
+                inputs=[prj_fe],
+                outputs=[ self.raw_lang_code,  self.code_lang_ch_btn, self.
+                    code_lang_changed_md]  # 使用 get 方法获取组件值
+            )
+            code_lang_ch_btn.click(
+                gr_funcs.change_code_lang,
+                inputs=[ self.code_lang_ch_btn,  self.raw_lang_code, self.to_lang, user_service.get_user_id(), llm],  # 获取用户 ID 并传递 llm
+                outputs=[ self.code_lang_ch_btn, self.code_lang_changed_md]  # 使用 get 方法获取组件值
+            )
+            search_btn.click(
+                gr_funcs.arxiv_search_func,
+                inputs=[ self.search_query,
+                        user_service.get_user_id()],  # 获取用户 ID
+                outputs=[ self.search_results, self.selected_paper]  # 使用 get 方法获取组件值
+            )
+            process_paper_btn.click(
+                gr_funcs.process_paper,
+                inputs=[ self.selected_paper,
+                        user_service.get_user_id()],  # 获取用户 ID
+                outputs=[ self.paper_summary]  # 使用 get 方法获取组件值
+            )
+
+            # GitHub 搜索按钮点击事件
+            github_search_btn.click(
+                fn=gr_funcs.github_search_func,
+                inputs=[ self.github_query,
+                        user_service.get_user_id()],  # 获取用户 ID
+                outputs=[ self.github_search_results, self.selected_github_repo]  # 使用 get 方法获取组件值
+            )
+
+            # 处理 GitHub 仓库按钮点击事件
+            process_github_repo_btn.click(
+                fn=gr_funcs.process_github_repo,
+                inputs=[ self.selected_github_repo,
+                        user_service.get_user_id()],  # 获取用户 ID
+                outputs=[ self.repo_summary]  # 使用 get 方法获取组件值
+            )
+
+            # 资源搜索按钮点击事件
+            resource_search_btn.click(
+                fn=gr_funcs.search_resource,
+                inputs=[ self.resource_query],
+                outputs=[ self.resource_search_results, self.selected_resource]  # 使用 get 方法获取组件值
+            )
+
+            # 处理资源按钮点击事件
+            process_resource_btn.click(
+                fn=gr_funcs.process_resource,
+                inputs=[ self.selected_resource],
+                outputs=[ self.resource_summary]  # 使用 get 方法获取组件值
+            )
+
+            # 新增下载资源按钮点击事件
+            download_resource_btn.click(
+                fn=download_resource,
+                inputs=[ self.selected_resource, user_service.get_user_id(), gr.File(
+                    label="选择下载路径")],  # 添加用户选择的路径
+                outputs=gr.Textbox()  # 或者其他合适的输出组件
+            )
+
+            # 选择路径按钮点击事件
+            select_paths_btn.click(
+                fn=select_paths_handler,
+                inputs=[user_service.get_user_id(), project_path, paper_path],
+                outputs=gr.Textbox()
+            )
+
+            # 添加事件处理程序，用于选择云库中的项目路径并进行分析
+            project_path.change(
+                fn=lambda user_id, project_path: select_paths_handler(
+                    user_id, project_path, None),
+                inputs=[user_service.get_user_id(), project_path],
+                outputs=gr.Textbox()
+            )
+
+            # 添加事件处理程序，用于选择云库中的论文路径并进行分析
+            paper_path.change(
+                fn=lambda user_id, paper_path: select_paths_handler(
+                    user_id, None, paper_path),
+                inputs=[user_service.get_user_id(), paper_path],
+                outputs=gr.Textbox()
+            )
+
+            # 新增新建对话按钮点击事件
+            new_conversation_btn.click(
+                fn=lambda: create_new_conversation(user_service.get_user_id()),
+                inputs=[],
+                outputs=[self.conversation_list, self.conversation_history]
+            )
+
+            # 新增对话列表选择事件
+            self.conversation_list.change(
+                fn=select_conversation,
+                inputs=[self.conversation_list],
+                outputs=[self.conversation_history]
+            )
+
         demo.launch(share=False)
         return {
             'prj_name_tb': self.prj_name_tb,
             'selected_resource': self.selected_resource,
             'conversation_list': self.conversation_list,
             'conversation_history': self.conversation_history,
-            'user_id': self.user_id
+            'user_id': self.user_id,
+            'model_selector': self.model_selector,
+            'dir_submit_btn': self.dir_submit_btn,
+            'prj_fe': self.prj_fe,
+            'prj_chat_btn': self.prj_chat_btn,
+            'code_cmt_btn': self.code_cmt_btn,
+            'code_lang_ch_btn': self.code_lang_ch_btn,
+            'search_btn': self.search_btn,
+            'process_paper_btn': self.process_paper_btn,
+            'github_search_btn': self.github_search_btn,
+            'process_github_repo_btn': self.process_github_repo_btn,
+            'resource_search_btn': self.resource_search_btn,
+            'process_resource_btn': self.process_resource_btn,
+            'project_path': self.project_path,
+            'paper_path': self.paper_path,
+            'select_paths_btn': self.select_paths_btn,
+            'download_resource_btn': self.download_resource_btn,
+            'new_conversation_btn': self.new_conversation_btn,
+            'conversation_list': self.conversation_list,
+            'conversation_history': self.conversation_history,
+            'register_btn': self.register_btn,
+            'login_btn': self.login_btn,
+            'register_username': self.register_username,
+            'register_email': self.register_email,
+            'register_password': self.register_password,
+            'login_username': self.login_username,
+            'login_password': self.login_password,
         }
 
     def update_conversation_list(self):
@@ -329,7 +513,7 @@ class UIManager:
         if self.user_id:
             base_path = f'./Cloud_base/user_{self.user_id}/project_base' if file.name.endswith(
                 '.zip') else f'./Cloud_base/user_{self.user_id}/paper_base'
-            file_name, new_dir = handlers.save_file(file, self.user_id)
+            file_name, new_dir = save_file(file, self.user_id)
 
             # 更新 PRJ_DIR 为新上传资源的路径
             os.environ["PRJ_DIR"] = new_dir
@@ -352,9 +536,52 @@ class UIManager:
 
     def update_resource_choices(self):
         if self.user_id:
-            resource_choices = handlers.get_user_resources(self.user_id)
+            resource_choices = get_user_resources(self.user_id)
             selected_resource = self.get_component('selected_resource')
             selected_resource.update(choices=resource_choices)
 
     def get_component(self, component_name):
         return gr.Blocks.get_component(self.build_ui(None)[component_name])
+
+def register_handler(username, email, password):
+    success, message = user_service.register(username, password, email)
+    return message
+
+def login_handler(username, password):
+    success, user_id, cloud_storage_path = user_service.login(
+        username, password)
+    if success:
+        user_info = user_service.get_user_info(user_id)
+        return f"登录成功，用户ID: {user_id}, 云库路径: {cloud_storage_path}", user_info
+    else:
+        return "登录失败，请检查用户名和密码", None
+def save_file(file, user_id):
+    # 检查并创建路径
+    base_path = os.path.join('./Cloud_base', f'user_{user_id}')
+    project_base_path = os.path.join(base_path, 'project_base')
+    paper_base_path = os.path.join(base_path, 'paper_base')
+
+    os.makedirs(project_base_path, exist_ok=True)
+    os.makedirs(paper_base_path, exist_ok=True)
+
+    file_name = secure_filename(file.filename)  # 使用 secure_filename 获取安全的文件名
+    file_path = os.path.join(UPLOAD_FOLDER, file_name)
+
+    # 保存文件到 uploads 文件夹
+    file.save(file_path)
+
+    if file_name.endswith('.zip'):
+        # 解压压缩包到 project_base 文件夹
+        with zipfile.ZipFile(file_path, 'r') as zip_ref:
+            zip_ref.extractall(project_base_path)
+        new_dir = project_base_path
+    else:
+        # 保存单个文件到 paper_base 文件夹
+        new_file_path = os.path.join(paper_base_path, file_name)
+        shutil.copy(file_path, new_file_path)
+        new_dir = paper_base_path
+
+    # 删除临时文件
+    os.remove(file_path)
+
+    return file_name, new_dir

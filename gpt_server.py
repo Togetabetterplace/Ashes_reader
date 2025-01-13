@@ -7,16 +7,16 @@ def set_llm(model_name):
     global model
 
     model_cat = model_name.split('-')[0]
-    if model_cat == 'gpt':
-        from llms.chatgpt import ChatGPT
-        model = ChatGPT(model_name)
-    elif model_cat == 'chatglm3':
-        from llms.chatglm import ChatGLM3
-        model = ChatGLM3(model_name)
-    elif model_cat == 'Qwen':
+    # if model_cat == 'gpt':
+    #     from llms.chatgpt import ChatGPT
+    #     model = ChatGPT(model_name)
+    # elif model_cat == 'chatglm3':
+    #     from llms.chatglm import ChatGLM3
+    #     model = ChatGLM3(model_name)
+    if model_cat == 'Qwen':
         from llms.LLM_init import Qwen
         model = Qwen(model_name)
-    elif model_cat == 'Allama':
+    elif model_cat == 'llama':
         from llms.Llama_init import Llama
         model = Llama(model_name)
     else:
