@@ -1,6 +1,5 @@
 # file: /Users/zyb/Desktop/CSU_Zichen/graduation-design/Ashes_reader/RAG/rag.py
 
-
 import os
 import json
 import jieba
@@ -11,23 +10,13 @@ from RAG.embeddings import PEmbedding
 from modelscope import snapshot_download
 from transformers import AutoModelForSequenceClassification, AutoTokenizer, AutoModel
 from RAG.pdfparser import extract_page_text
-import faiss
-import os
-import jieba
-from transformers import AutoTokenizer, AutoModel
-import faiss
 import numpy as np
 from rank_bm25 import BM25Okapi
 import pickle
-# import numpy as np
-# from vllm import SamplingParams
-# from RAG.LLM_generation_utils import make_context, decode_tokens, get_stop_words_ids
-# from RAG.LLM_bm25 import LLMPredictor
-# from tqdm import tqdm
-# from pdfparser import extract_page_text
 
 MODEL_PATH = './models/hub/BAAI/gte-large-zh'
 MODEL_PATH = './models/hub/BAAI/bge-large-zh'
+
 def infer_by_batch(prompts, llm):
     """
     批量推理函数。
@@ -49,7 +38,6 @@ def rerank(docs, query, rerank_tokenizer, rerank_model, k=4):
     scores = outputs.logits.squeeze().cpu().numpy()
     ranked_docs = [doc for _, doc in sorted(zip(scores, docs), reverse=True)[:k]]
     return ranked_docs
-
 
 # 构建rag_cache
 def build_rag_cache(user_CloudBase_path, cache_dir='./RAG_cache/'):
@@ -81,24 +69,22 @@ def build_rag_cache(user_CloudBase_path, cache_dir='./RAG_cache/'):
         if os.path.isfile(filepath):
             docs = extract_page_text(filepath=filepath, max_len=300, overlap_len=100) + \
                    extract_page_text(filepath=filepath, max_len=500, overlap_len=200)
-            orpus = [item.page_content for item in docs]
-            bm25_docs.extend(orpus)
+            corpus = [item.page_content for item in docs]
+            bm25_docs.extend(corpus)
 
             # BGE 向量
             bge_vectors = bge_embeddings.encode(docs)
-            bge_index = faiss.IndexFlatL2(bge_vectors.shape[1])
-            bge_index.add(bge_vectors)
+            bge_faiss = FAISS.from_embeddings(embeddings=bge_vectors, embedding_function=bge_embeddings.embed_query, metadatas=[{"text": doc} for doc in corpus])
 
             # GTE 向量
             gte_vectors = gte_embeddings.encode(docs)
-            gte_index = faiss.IndexFlatL2(gte_vectors.shape[1])
-            gte_index.add(gte_vectors)
+            gte_faiss = FAISS.from_embeddings(embeddings=gte_vectors, embedding_function=gte_embeddings.embed_query, metadatas=[{"text": doc} for doc in corpus])
 
             # 保存 BGE 向量库
-            faiss.write_index(bge_index, os.path.join(cache_dir, 'bge_vector_store.faiss'))
+            bge_faiss.save_local(os.path.join(cache_dir, 'bge_vector_store'))
 
             # 保存 GTE 向量库
-            faiss.write_index(gte_index, os.path.join(cache_dir, 'gte_vector_store.faiss'))
+            gte_faiss.save_local(os.path.join(cache_dir, 'gte_vector_store'))
 
     # 构建 BM25 索引
     bm25 = BM25Okapi(bm25_docs)
@@ -124,19 +110,21 @@ def rag_inference(query, llm, cache_dir='./RAG_cache', batch_size=4, num_input_d
     rerank_model.cuda()
 
     # 加载向量库
-    db = FAISS.load_local(os.path.join(cache_dir, 'vector_store'))
-    with open(os.path.join(cache_dir, 'bm25_corpus.json'), 'r', encoding='utf-8') as f:
-        corpus = json.load(f)
+    bge_db = FAISS.load_local(os.path.join(cache_dir, 'bge_vector_store'))
+    gte_db = FAISS.load_local(os.path.join(cache_dir, 'gte_vector_store'))
 
-    # 初始化 BM25 模型
-    BM25 = BM25Model(corpus)
+    with open(os.path.join(cache_dir, 'bm25_docs.pkl'), 'rb') as f:
+        bm25_docs = pickle.load(f)
+    bm25 = BM25Okapi(bm25_docs)
 
     # BM25 召回
-    search_docs = BM25.bm25_similarity(query * 3, 10)
+    search_docs = bm25.get_top_n(query, bm25_docs, n=10)
+
     # BGE 召回
-    search_docs2 = db.similarity_search(query * 3, k=10)
+    search_docs2 = bge_db.similarity_search(query, k=10)
+
     # GTE 召回
-    search_docs3 = db.similarity_search(query * 3, k=10)
+    search_docs3 = gte_db.similarity_search(query, k=10)
 
     # 初始化嵌入模型
     embedding_model = PEmbedding(model_path='path_to_embedding_model')  # 替换为实际的嵌入模型路径
@@ -145,14 +133,15 @@ def rag_inference(query, llm, cache_dir='./RAG_cache', batch_size=4, num_input_d
     query_embedding = embedding_model.embed_query(query)
 
     # 对召回的文档进行嵌入
-    doc_embeddings = embedding_model.embed_documents(search_docs + search_docs2 + search_docs3)
+    all_docs = search_docs + [doc.metadata['text'] for doc in search_docs2 + search_docs3]
+    doc_embeddings = embedding_model.embed_documents(all_docs)
 
     # 计算查询与文档之间的余弦相似度
     similarities = np.dot(query_embedding, np.array(doc_embeddings).T).flatten()
 
     # 结合 BM25 分数和嵌入相似度进行重排序
-    combined_scores = [bm25_score + similarity for bm25_score, similarity in zip(BM25.get_scores(jieba.lcut(query)), similarities)]
-    ranked_docs = [doc for _, doc in sorted(zip(combined_scores, search_docs + search_docs2 + search_docs3), reverse=True)[:num_input_docs]]
+    combined_scores = [bm25_score + similarity for bm25_score, similarity in zip(bm25.get_scores(jieba.lcut(query)), similarities)]
+    ranked_docs = [doc for _, doc in sorted(zip(combined_scores, all_docs), reverse=True)[:num_input_docs]]
 
     # 构建提示
     prompt1 = llm.get_prompt("\n".join(ranked_docs[::-1]), query, bm25=True)
