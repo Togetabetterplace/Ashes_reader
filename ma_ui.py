@@ -267,13 +267,6 @@ class UIManager:
                     upload_btn = gr.Button(
                         '上传', variant='primary', scale=1, min_width=100)
 
-            # # 绑定事件处理器
-            # handlers.bind_event_handlers(demo, llm, model_selector, dir_submit_btn, prj_fe, prj_chat_btn,
-            #                              code_cmt_btn, code_lang_ch_btn, search_btn, process_paper_btn,
-            #                              github_search_btn, process_github_repo_btn,resource_search_btn,
-            #                              process_resource_btn, project_path, paper_path, select_paths_btn,
-            #                              download_resource_btn, new_conversation_btn, self.conversation_list,
-            #                              self.conversation_history, self.prj_name_tb)
 
             # 注册和登录事件处理器
             register_btn.click(fn=register_handler, inputs=[
@@ -330,7 +323,7 @@ class UIManager:
             code_cmt_btn.click(
                 gr_funcs.ai_comment,
                 inputs=[ self.code_cmt_btn,  self.prj_fe,
-                        user_service.get_user_id(), llm],  # 获取用户 ID 并传递 llm
+                        self.user_id, llm],  # 获取用户 ID 并传递 llm
                 outputs=[ self.code_cmt_btn, self.cmt_code]  # 使用 get 方法获取组件值
             )
             prj_fe.change(
@@ -341,19 +334,20 @@ class UIManager:
             )
             code_lang_ch_btn.click(
                 gr_funcs.change_code_lang,
-                inputs=[ self.code_lang_ch_btn,  self.raw_lang_code, self.to_lang, user_service.get_user_id(), llm],  # 获取用户 ID 并传递 llm
+                inputs=[self.code_lang_ch_btn,  self.raw_lang_code,
+                        self.to_lang, self.user_id, llm],  # 获取用户 ID 并传递 llm
                 outputs=[ self.code_lang_ch_btn, self.code_lang_changed_md]  # 使用 get 方法获取组件值
             )
             search_btn.click(
                 gr_funcs.arxiv_search_func,
                 inputs=[ self.search_query,
-                        user_service.get_user_id()],  # 获取用户 ID
+                        self.user_id],  
                 outputs=[ self.search_results, self.selected_paper]  # 使用 get 方法获取组件值
             )
             process_paper_btn.click(
                 gr_funcs.process_paper,
                 inputs=[ self.selected_paper,
-                        user_service.get_user_id()],  # 获取用户 ID
+                         self.user_id],  # 获取用户 ID
                 outputs=[ self.paper_summary]  # 使用 get 方法获取组件值
             )
 
@@ -361,7 +355,7 @@ class UIManager:
             github_search_btn.click(
                 fn=gr_funcs.github_search_func,
                 inputs=[ self.github_query,
-                        user_service.get_user_id()],  # 获取用户 ID
+                         self.user_id],  # 获取用户 ID
                 outputs=[ self.github_search_results, self.selected_github_repo]  # 使用 get 方法获取组件值
             )
 
@@ -369,7 +363,7 @@ class UIManager:
             process_github_repo_btn.click(
                 fn=gr_funcs.process_github_repo,
                 inputs=[ self.selected_github_repo,
-                        user_service.get_user_id()],  # 获取用户 ID
+                         self.user_id],  # 获取用户 ID
                 outputs=[ self.repo_summary]  # 使用 get 方法获取组件值
             )
 
@@ -390,7 +384,7 @@ class UIManager:
             # 新增下载资源按钮点击事件
             download_resource_btn.click(
                 fn=download_resource,
-                inputs=[ self.selected_resource, user_service.get_user_id(), gr.File(
+                inputs=[self.selected_resource, self.user_id, gr.File(
                     label="选择下载路径")],  # 添加用户选择的路径
                 outputs=gr.Textbox()  # 或者其他合适的输出组件
             )
@@ -398,7 +392,7 @@ class UIManager:
             # 选择路径按钮点击事件
             select_paths_btn.click(
                 fn=select_paths_handler,
-                inputs=[user_service.get_user_id(), project_path, paper_path],
+                inputs=[self.user_id, project_path, paper_path],
                 outputs=gr.Textbox()
             )
 
@@ -406,7 +400,7 @@ class UIManager:
             project_path.change(
                 fn=lambda user_id, project_path: select_paths_handler(
                     user_id, project_path, None),
-                inputs=[user_service.get_user_id(), project_path],
+                inputs=[self.user_id, project_path],
                 outputs=gr.Textbox()
             )
 
@@ -414,13 +408,13 @@ class UIManager:
             paper_path.change(
                 fn=lambda user_id, paper_path: select_paths_handler(
                     user_id, None, paper_path),
-                inputs=[user_service.get_user_id(), paper_path],
+                inputs=[self.user_id, paper_path],
                 outputs=gr.Textbox()
             )
 
             # 新增新建对话按钮点击事件
             new_conversation_btn.click(
-                fn=lambda: create_new_conversation(user_service.get_user_id()),
+                fn=lambda: create_new_conversation(self.user_id),
                 inputs=[],
                 outputs=[self.conversation_list, self.conversation_history]
             )
