@@ -1,5 +1,5 @@
 -- DB.SQL
--- ÓÃ»§±í
+-- ç”¨æˆ·è¡¨
 CREATE TABLE users (
     user_id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT UNIQUE NOT NULL,
@@ -11,7 +11,7 @@ CREATE TABLE users (
     is_admin BOOLEAN DEFAULT FALSE
 );
 
--- ÓÃ»§¶Ô»°±í
+-- ç”¨æˆ·å¯¹è¯è¡¨
 CREATE TABLE user_conversations (
     conversation_id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
@@ -21,7 +21,7 @@ CREATE TABLE user_conversations (
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
 
--- ÓÃ»§×ÊÔ´±í
+-- ç”¨æˆ·èµ„æºè¡¨
 CREATE TABLE user_resources (
     resource_id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
@@ -31,18 +31,18 @@ CREATE TABLE user_resources (
 );
 /*
 
--- ²åÈëÓÃ»§Êı¾İ
+-- æ’å…¥ç”¨æˆ·æ•°æ®
 INSERT INTO users (username, password, cloud_storage_path) VALUES
 ('user1', 'password1', './Local_base/1/'),
 ('user2', 'password2', './Local_base/2/');
 
--- ²åÈë¶Ô»°ÀúÊ·Êı¾İ
+-- æ’å…¥å¯¹è¯å†å²æ•°æ®
 INSERT INTO user_conversations (user_id, conversation_history) VALUES
-(1, 'ÓÃ»§: ÄãºÃ\nÖúÊÖ: ÄãºÃ£¡ÓĞÊ²Ã´ÎÒ¿ÉÒÔ°ïÃ¦µÄÂğ£¿'),
-(1, 'ÓÃ»§: Çë½âÊÍÒ»ÏÂÕâ¸ö´úÂë\nÖúÊÖ: µ±È»£¬ÕâÊÇ...'),
-(2, 'ÓÃ»§: ÄãºÃ\nÖúÊÖ: ÄãºÃ£¡ÓĞÊ²Ã´ÎÒ¿ÉÒÔ°ïÃ¦µÄÂğ£¿');
+(1, 'ç”¨æˆ·: ä½ å¥½\nåŠ©æ‰‹: ä½ å¥½ï¼æœ‰ä»€ä¹ˆæˆ‘å¯ä»¥å¸®å¿™çš„å—ï¼Ÿ'),
+(1, 'ç”¨æˆ·: è¯·è§£é‡Šä¸€ä¸‹è¿™ä¸ªä»£ç \nåŠ©æ‰‹: å½“ç„¶ï¼Œè¿™æ˜¯...'),
+(2, 'ç”¨æˆ·: ä½ å¥½\nåŠ©æ‰‹: ä½ å¥½ï¼æœ‰ä»€ä¹ˆæˆ‘å¯ä»¥å¸®å¿™çš„å—ï¼Ÿ');
 
--- ²åÈë×ÊÔ´Êı¾İ
+-- æ’å…¥èµ„æºæ•°æ®
 INSERT INTO user_resources (user_id, resource_name, resource_path) VALUES
 (1, 'example_code.py', './Local_base/1/example_code.py'),
 (1, 'example_paper.pdf', './Local_base/1/example_paper.pdf'),

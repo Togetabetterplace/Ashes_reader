@@ -2,15 +2,16 @@
 import math
 from typing import List
 
+
 class BM25Okapi:
     def __init__(self, corpus: List[str], k1: float = 1.5, b: float = 0.75):
         """
-        ³õÊ¼»¯ BM25Okapi ¶ÔÏó
+        åˆå§‹åŒ– BM25Okapi å¯¹è±¡
 
-        ²ÎÊı:
-        corpus (List[str]): ÎÄµµ¼¯ºÏ
-        k1 (float): BM25 ²ÎÊı£¬Ä¬ÈÏÎª 1.5
-        b (float): BM25 ²ÎÊı£¬Ä¬ÈÏÎª 0.75
+        å‚æ•°:
+        corpus (List[str]): æ–‡æ¡£é›†åˆ
+        k1 (float): BM25 å‚æ•°ï¼Œé»˜è®¤ä¸º 1.5
+        b (float): BM25 å‚æ•°ï¼Œé»˜è®¤ä¸º 0.75
         """
         self.corpus_size = len(corpus)
         self.avgdl = sum(len(doc) for doc in corpus) / self.corpus_size
@@ -25,7 +26,7 @@ class BM25Okapi:
 
     def _initialize(self):
         """
-        ³õÊ¼»¯ÎÄµµÆµÂÊºÍÄæÎÄµµÆµÂÊ
+        åˆå§‹åŒ–æ–‡æ¡£é¢‘ç‡å’Œé€†æ–‡æ¡£é¢‘ç‡
         """
         for document in self.corpus:
             frequencies = {}
@@ -41,37 +42,39 @@ class BM25Okapi:
                 self.df[word] += 1
 
         for word, freq in self.df.items():
-            self.idf[word] = math.log(self.corpus_size - freq + 0.5) - math.log(freq + 0.5)
+            self.idf[word] = math.log(
+                self.corpus_size - freq + 0.5) - math.log(freq + 0.5)
 
     def get_score(self, document: List[str], query: List[str]) -> float:
         """
-        ¼ÆËãÎÄµµÓë²éÑ¯µÄ BM25 ·ÖÊı
+        è®¡ç®—æ–‡æ¡£ä¸æŸ¥è¯¢çš„ BM25 åˆ†æ•°
 
-        ²ÎÊı:
-        document (List[str]): ÎÄµµ
-        query (List[str]): ²éÑ¯
+        å‚æ•°:
+        document (List[str]): æ–‡æ¡£
+        query (List[str]): æŸ¥è¯¢
 
-        ·µ»Ø:
-        float: BM25 ·ÖÊı
+        è¿”å›:
+        float: BM25 åˆ†æ•°
         """
         score = 0.0
         for word in query:
             if word in document and word in self.idf:
                 freq = self.f[self.corpus.index(document)][word]
                 numerator = self.idf[word] * freq * (self.k1 + 1)
-                denominator = freq + self.k1 * (1 - self.b + self.b * (len(document) / self.avgdl))
+                denominator = freq + self.k1 * \
+                    (1 - self.b + self.b * (len(document) / self.avgdl))
                 score += (numerator / denominator)
         return score
 
     def get_scores(self, query: List[str]) -> List[float]:
         """
-        ¼ÆËãËùÓĞÎÄµµÓë²éÑ¯µÄ BM25 ·ÖÊı
+        è®¡ç®—æ‰€æœ‰æ–‡æ¡£ä¸æŸ¥è¯¢çš„ BM25 åˆ†æ•°
 
-        ²ÎÊı:
-        query (List[str]): ²éÑ¯
+        å‚æ•°:
+        query (List[str]): æŸ¥è¯¢
 
-        ·µ»Ø:
-        List[float]: ËùÓĞÎÄµµµÄ BM25 ·ÖÊı
+        è¿”å›:
+        List[float]: æ‰€æœ‰æ–‡æ¡£çš„ BM25 åˆ†æ•°
         """
         scores = []
         for document in self.corpus:
@@ -81,16 +84,17 @@ class BM25Okapi:
 
     def get_top_n(self, query: List[str], documents: List[str], n: int = 5) -> List[str]:
         """
-        »ñÈ¡Óë²éÑ¯×îÏà¹ØµÄÇ° n ¸öÎÄµµ
+        è·å–ä¸æŸ¥è¯¢æœ€ç›¸å…³çš„å‰ n ä¸ªæ–‡æ¡£
 
-        ²ÎÊı:
-        query (List[str]): ²éÑ¯
-        documents (List[str]): ÎÄµµ¼¯ºÏ
-        n (int): ·µ»ØµÄÎÄµµÊıÁ¿
+        å‚æ•°:
+        query (List[str]): æŸ¥è¯¢
+        documents (List[str]): æ–‡æ¡£é›†åˆ
+        n (int): è¿”å›çš„æ–‡æ¡£æ•°é‡
 
-        ·µ»Ø:
-        List[str]: ×îÏà¹ØµÄÇ° n ¸öÎÄµµ
+        è¿”å›:
+        List[str]: æœ€ç›¸å…³çš„å‰ n ä¸ªæ–‡æ¡£
         """
         scores = self.get_scores(query)
-        top_n = sorted(zip(documents, scores), key=lambda x: x[1], reverse=True)[:n]
+        top_n = sorted(zip(documents, scores),
+                       key=lambda x: x[1], reverse=True)[:n]
         return [doc for doc, score in top_n]
