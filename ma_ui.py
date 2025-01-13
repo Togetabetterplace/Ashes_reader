@@ -21,7 +21,6 @@ import logging
 UPLOAD_FOLDER = './uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-
 class UIManager:
     def __init__(self):
         self.prj_name_tb = None
@@ -88,11 +87,11 @@ class UIManager:
             self.prj_name_tb = gr.Textbox(
                 value=f'{os.environ["PRJ_DIR"]}', visible=False)
             with gr.Accordion(label='选择模型（选择开源大模型，如果本地没有，会自动下载，下载完毕后再使用下面的功能）'):
-                model_selector = gr.Dropdown(
+                self.model_selector = gr.Dropdown(
                     choices=config.model_list, container=False, elem_id='box_shad')
 
             with gr.Row():
-                prj_fe = gr.FileExplorer(
+                self.prj_fe = gr.FileExplorer(
                     label='项目文件',
                     file_count='single',
                     scale=1
@@ -100,38 +99,38 @@ class UIManager:
 
             with gr.Accordion('用户注册', open=False):
                 with gr.Row():
-                    register_username = gr.Textbox(
+                    self.register_username = gr.Textbox(
                         label='用户名', interactive=True, scale=2)
-                    register_email = gr.Textbox(
+                    self.register_email = gr.Textbox(
                         label='邮箱', interactive=True, scale=2)
-                    register_password = gr.Textbox(
+                    self.register_password = gr.Textbox(
                         label='密码', type='password', interactive=True, scale=2)
                 with gr.Row():
-                    register_btn = gr.Button('注册', variant='primary')
+                    self.register_btn = gr.Button('注册', variant='primary')
 
             with gr.Accordion('用户登录', open=False):
                 with gr.Row():
-                    login_username = gr.Textbox(
+                    self.login_username = gr.Textbox(
                         label='用户名', interactive=True, scale=2)
-                    login_password = gr.Textbox(
+                    self.login_password = gr.Textbox(
                         label='密码', type='password', interactive=True, scale=2)
                 with gr.Row():
-                    login_btn = gr.Button('登录', variant='primary')
+                    self.login_btn = gr.Button('登录', variant='primary')
 
             with gr.Accordion('选择项目或论文路径', open=False):
                 with gr.Row():
-                    project_path = gr.Dropdown(
+                    self.project_path = gr.Dropdown(
                         label='项目路径', interactive=True, scale=2)
-                    paper_path = gr.Dropdown(
+                    self.paper_path = gr.Dropdown(
                         label='论文路径', interactive=True, scale=2)
                 with gr.Row():
-                    select_paths_btn = gr.Button('选择路径', variant='primary')
+                    self.select_paths_btn = gr.Button('选择路径', variant='primary')
 
             with gr.Accordion('对话管理', open=False):
                 with gr.Row():
                     self.conversation_list = gr.Dropdown(
                         label='对话列表', choices=[], container=False, scale=5)
-                    new_conversation_btn = gr.Button(
+                    self.new_conversation_btn = gr.Button(
                         '新建对话', variant='primary', scale=1, min_width=100)
                 with gr.Row():
                     self.conversation_history = gr.Chatbot(
@@ -139,31 +138,31 @@ class UIManager:
 
             with gr.Accordion('阅读项目', open=False):
                 with gr.Row():
-                    code = gr.Code(label='代码', visible=False,
-                                   elem_id='code', scale=2)
+                    self.code = gr.Code(label='代码', visible=False,
+                                       elem_id='code', scale=2)
                     with gr.Column():
-                        gpt_label = gr.Chatbot(
+                        self.gpt_label = gr.Chatbot(
                             label='项目阅读助手', height=40, visible=False, elem_id='gpt_label')
-                        gpt_md = gr.Markdown(
+                        self.gpt_md = gr.Markdown(
                             visible=False, elem_id='llm_res', elem_classes='markdown-class')
 
                 with gr.Row():
-                    dir_submit_btn = gr.Button('阅读项目', variant='primary')
+                    self.dir_submit_btn = gr.Button('阅读项目', variant='primary')
 
                 with gr.Row():
-                    label = gr.Label(label="源码阅读进度", value='等待开始...')
+                    self.label = gr.Label(label="源码阅读进度", value='等待开始...')
 
             with gr.Accordion(label='对话模式', open=False):
                 with gr.Tab('改写助手'):
                     with gr.Row():
-                        prj_chat_txt = gr.Textbox(label='输入框',
-                                                  value='总结整个项目',
-                                                  placeholder='请输入...',
-                                                  container=False,
-                                                  interactive=True,
-                                                  scale=5,
-                                                  elem_id='prg_tb')
-                        prj_chat_btn = gr.Button(
+                        self.prj_chat_txt = gr.Textbox(label='输入框',
+                                                      value='总结整个项目',
+                                                      placeholder='请输入...',
+                                                      container=False,
+                                                      interactive=True,
+                                                      scale=5,
+                                                      elem_id='prg_tb')
+                        self.prj_chat_btn = gr.Button(
                             value='发送', variant='primary', scale=1, min_width=100)
                 with gr.Tab('论文阅读助手'):
                     with gr.Row():
@@ -179,11 +178,11 @@ class UIManager:
                                           scale=1, variant='primary')
 
             with gr.Accordion(label='代码注释', open=False, elem_id='code_cmt'):
-                code_cmt_btn = gr.Button(
+                self.code_cmt_btn = gr.Button(
                     '选择一个源文件', variant='secondary', interactive=False)
                 with gr.Row():
-                    uncmt_code = gr.Code(label='原代码', elem_id='uncmt_code')
-                    cmt_code = gr.Code(
+                    self.uncmt_code = gr.Code(label='原代码', elem_id='uncmt_code')
+                    self.cmt_code = gr.Code(
                         label='注释后代码', elem_id='cmt_code', visible=False)
 
             with gr.Accordion(label='语言转换', open=False, elem_id='code_lang_change'):
@@ -191,73 +190,73 @@ class UIManager:
                     lang_to_change = [
                         'java', 'python', 'javascript', 'c++', 'php', 'go', 'r', 'perl', 'swift', 'ruby'
                     ]
-                    to_lang = gr.Dropdown(choices=lang_to_change, container=False,
-                                          value=lang_to_change[0], elem_id='box_shad', interactive=True, scale=2)
-                    code_lang_ch_btn = gr.Button(
+                    self.to_lang = gr.Dropdown(choices=lang_to_change, container=False,
+                                              value=lang_to_change[0], elem_id='box_shad', interactive=True, scale=2)
+                    self.code_lang_ch_btn = gr.Button(
                         '选择一个源文件', variant='secondary', interactive=False, scale=1)
                 with gr.Row():
-                    raw_lang_code = gr.Code(label='原代码', elem_id='uncmt_code')
-                    code_lang_changed_md = gr.Markdown(
+                    self.raw_lang_code = gr.Code(label='原代码', elem_id='uncmt_code')
+                    self.code_lang_changed_md = gr.Markdown(
                         label='转换代码语言', visible=False, elem_id='box_shad')
 
             # 新增的论文搜索选项卡
             with gr.Accordion(label='论文搜索', open=False):
                 with gr.Row():
-                    search_query = gr.Textbox(
+                    self.search_query = gr.Textbox(
                         label='搜索查询', placeholder='请输入论文序列号、关键词或作者', container=False, scale=5)
                     search_btn = gr.Button(
                         value='搜索', variant='primary', scale=1, min_width=100)
                 with gr.Row():
-                    search_results = gr.Markdown(
+                    self.search_results = gr.Markdown(
                         label='搜索结果', elem_classes='markdown-class')
                 with gr.Row():
-                    selected_paper = gr.Dropdown(
+                    self.selected_paper = gr.Dropdown(
                         label='选择论文', choices=[], container=False, scale=5)
                     process_paper_btn = gr.Button(
                         value='对论文进行处理', variant='primary', scale=1, min_width=100)
                 with gr.Row():
-                    paper_summary = gr.Markdown(
+                    self.paper_summary = gr.Markdown(
                         label='论文摘要', elem_classes='markdown-class')
 
             # 新增的 GitHub 搜索选项卡
             with gr.Accordion(label='GitHub 搜索', open=False):
                 with gr.Row():
-                    github_query = gr.Textbox(
+                    self.github_query = gr.Textbox(
                         label='搜索查询', placeholder='请输入仓库名、关键词或作者', container=False, scale=5)
                     github_search_btn = gr.Button(
                         value='搜索', variant='primary', scale=1, min_width=100)
                 with gr.Row():
-                    github_search_results = gr.Markdown(
+                    self.github_search_results = gr.Markdown(
                         label='搜索结果', elem_classes='markdown-class')
                 with gr.Row():
-                    selected_github_repo = gr.Dropdown(
+                    self.selected_github_repo = gr.Dropdown(
                         label='选择仓库', choices=[], container=False, scale=5)
                     process_github_repo_btn = gr.Button(
                         value='处理仓库', variant='primary', scale=1, min_width=100)
                 with gr.Row():
-                    repo_summary = gr.Markdown(
+                    self.repo_summary = gr.Markdown(
                         label='仓库摘要', elem_classes='markdown-class')
 
             # 新增库内资源选项卡
             with gr.Accordion(label='库内资源', open=False):
                 with gr.Row():
-                    resource_query = gr.Textbox(
+                    self.resource_query = gr.Textbox(
                         label='搜索查询', placeholder='请输入关键词', container=False, scale=5)
                     resource_search_btn = gr.Button(
                         value='搜索', variant='primary', scale=1, min_width=100)
                 with gr.Row():
-                    resource_search_results = gr.Markdown(
+                    self.resource_search_results = gr.Markdown(
                         label='搜索结果', elem_classes='markdown-class')
                 with gr.Row():
-                    selected_resource = gr.Dropdown(
+                    self.selected_resource = gr.Dropdown(
                         label='选择资源', choices=[], container=False, scale=5)
                     process_resource_btn = gr.Button(
                         value='处理资源', variant='primary', scale=1, min_width=100)
                 with gr.Row():
-                    resource_summary = gr.Markdown(
+                    self.resource_summary = gr.Markdown(
                         label='资源摘要', elem_classes='markdown-class')
                 with gr.Row():
-                    download_resource_btn = gr.Button(
+                    self.download_resource_btn = gr.Button(
                         value='下载资源', variant='primary', scale=1, min_width=100)
 
                 # 新增上传文件选项卡
@@ -267,153 +266,131 @@ class UIManager:
                     upload_btn = gr.Button(
                         '上传', variant='primary', scale=1, min_width=100)
 
-
             # 注册和登录事件处理器
-            register_btn.click(fn=register_handler, inputs=[
-                               register_username, register_email, register_password], outputs=gr.Textbox())
-            login_btn.click(fn=login_handler, inputs=[
-                            login_username, login_password], outputs=[gr.Textbox(), gr.JSON()])
-            self.conversation_list.change(fn=lambda conversation_id: self.select_conversation(
-                conversation_id), inputs=[self.conversation_list], outputs=[self.conversation_history])
-            new_conversation_btn.click(fn=lambda: self.create_new_conversation(
-            ), inputs=[], outputs=[self.conversation_list, self.conversation_history])
-            prj_chat_btn.click(fn=lambda message: self.send_message(message), inputs=[
-                               prj_chat_txt], outputs=[self.conversation_history])
-            prj_chat_btn.click(lambda: "", outputs=prj_chat_txt)
-            search_btn.click(fn=lambda query: self.process_arxiv_search(query), inputs=[
-                             search_query], outputs=[search_results, selected_paper])
-            github_search_btn.click(fn=lambda query: self.process_github_search(query), inputs=[
-                                    github_query], outputs=[github_search_results, selected_github_repo])
-            process_resource_btn.click(fn=lambda selected_resource: self.process_selected_resource(
-                selected_resource), inputs=[selected_resource], outputs=[resource_summary])
-            upload_btn.click(fn=lambda file: self.upload_file_handler(
-                file), inputs=[upload_file], outputs=gr.Textbox())
+            self.register_btn.click(fn=register_handler, inputs=[self.register_username, self.register_email, self.register_password], outputs=gr.Textbox())
+            self.login_btn.click(fn=login_handler, inputs=[self.login_username, self.login_password], outputs=[gr.Textbox(), gr.JSON()])
+            self.conversation_list.change(fn=lambda conversation_id: self.select_conversation(conversation_id), inputs=[self.conversation_list], outputs=[self.conversation_history])
+            self.new_conversation_btn.click(fn=lambda: self.create_new_conversation(), inputs=[], outputs=[self.conversation_list, self.conversation_history])
+            self.prj_chat_btn.click(fn=lambda message: self.send_message(message), inputs=[self.prj_chat_txt], outputs=[self.conversation_history])
+            self.prj_chat_btn.click(lambda: "", outputs=self.prj_chat_txt)
+            search_btn.click(fn=lambda query: self.process_arxiv_search(query), inputs=[self.search_query], outputs=[self.search_results, self.selected_paper])
+            github_search_btn.click(fn=lambda query: self.process_github_search(query), inputs=[self.github_query], outputs=[self.github_search_results, self.selected_github_repo])
+            process_resource_btn.click(fn=lambda selected_resource: self.process_selected_resource(selected_resource), inputs=[self.selected_resource], outputs=[self.resource_summary])
+            upload_btn.click(fn=lambda file: self.upload_file_handler(file), inputs=[upload_file], outputs=gr.Textbox())
 
-            model_selector.select(
+            self.model_selector.select(
                 gr_funcs.model_change,
-                inputs=[model_selector],
-                outputs=[model_selector]
+                inputs=[self.model_selector],
+                outputs=[self.model_selector]
             )
-            dir_submit_btn.click(
+            self.dir_submit_btn.click(
                 gr_funcs.analyse_project,
                 inputs=[self.prj_name_tb],  # 使用 get 方法获取组件值
-                outputs=[label]  # 使用 get 方法获取组件值
+                outputs=[self.label]  # 使用 get 方法获取组件值
             )
-            prj_fe.change(
+            self.prj_fe.change(
                 gr_funcs.view_prj_file,
-                inputs=[prj_fe],
-                outputs=[ code,  gpt_label,
-                         gpt_md]  # 使用 get 方法获取组件值
+                inputs=[self.prj_fe],
+                outputs=[self.code, self.gpt_label, self.gpt_md]  # 使用 get 方法获取组件值
             )
-            prj_chat_btn.click(
+            self.prj_chat_btn.click(
                 gr_funcs.prj_chat,
-                inputs=[ prj_chat_txt, self.prj_chatbot, llm],  # 传递 llm 参数
-                outputs=[ self.prj_chatbot]  # 使用 get 方法获取组件值
+                inputs=[self.prj_chat_txt, self.prj_chatbot, llm],  # 传递 llm 参数
+                outputs=[self.prj_chatbot]  # 使用 get 方法获取组件值
             )
-            prj_chat_btn.click(
+            self.prj_chat_btn.click(
                 gr_funcs.clear_textbox,
-                outputs= self.prj_chat_txt  # 使用 get 方法获取组件值
+                outputs=self.prj_chat_txt  # 使用 get 方法获取组件值
             )
-            prj_fe.change(
+            self.prj_fe.change(
                 gr_funcs.view_uncmt_file,
-                inputs=[prj_fe],
-                outputs=[ self.uncmt_code, self.
-                    code_cmt_btn,  self.cmt_code]  # 使用 get 方法获取组件值
+                inputs=[self.prj_fe],
+                outputs=[self.uncmt_code, self.code_cmt_btn, self.cmt_code]  # 使用 get 方法获取组件值
             )
-            code_cmt_btn.click(
+            self.code_cmt_btn.click(
                 gr_funcs.ai_comment,
-                inputs=[ self.code_cmt_btn,  self.prj_fe,
-                        self.user_id, llm],  # 获取用户 ID 并传递 llm
-                outputs=[ self.code_cmt_btn, self.cmt_code]  # 使用 get 方法获取组件值
+                inputs=[self.code_cmt_btn, self.prj_fe, self.user_id, llm],  # 获取用户 ID 并传递 llm
+                outputs=[self.code_cmt_btn, self.cmt_code]  # 使用 get 方法获取组件值
             )
-            prj_fe.change(
+            self.prj_fe.change(
                 gr_funcs.view_raw_lang_code_file,
-                inputs=[prj_fe],
-                outputs=[ self.raw_lang_code,  self.code_lang_ch_btn, self.
-                    code_lang_changed_md]  # 使用 get 方法获取组件值
+                inputs=[self.prj_fe],
+                outputs=[self.raw_lang_code, self.code_lang_ch_btn, self.code_lang_changed_md]  # 使用 get 方法获取组件值
             )
-            code_lang_ch_btn.click(
+            self.code_lang_ch_btn.click(
                 gr_funcs.change_code_lang,
-                inputs=[self.code_lang_ch_btn,  self.raw_lang_code,
-                        self.to_lang, self.user_id, llm],  # 获取用户 ID 并传递 llm
-                outputs=[ self.code_lang_ch_btn, self.code_lang_changed_md]  # 使用 get 方法获取组件值
+                inputs=[self.code_lang_ch_btn, self.raw_lang_code, self.to_lang, self.user_id, llm],  # 获取用户 ID 并传递 llm
+                outputs=[self.code_lang_ch_btn, self.code_lang_changed_md]  # 使用 get 方法获取组件值
             )
             search_btn.click(
                 gr_funcs.arxiv_search_func,
-                inputs=[ self.search_query,
-                        self.user_id],  
-                outputs=[ self.search_results, self.selected_paper]  # 使用 get 方法获取组件值
+                inputs=[self.search_query, self.user_id],  
+                outputs=[self.search_results, self.selected_paper]  # 使用 get 方法获取组件值
             )
             process_paper_btn.click(
                 gr_funcs.process_paper,
-                inputs=[ self.selected_paper,
-                         self.user_id],  # 获取用户 ID
-                outputs=[ self.paper_summary]  # 使用 get 方法获取组件值
+                inputs=[self.selected_paper, self.user_id],  # 获取用户 ID
+                outputs=[self.paper_summary]  # 使用 get 方法获取组件值
             )
 
             # GitHub 搜索按钮点击事件
             github_search_btn.click(
                 fn=gr_funcs.github_search_func,
-                inputs=[ self.github_query,
-                         self.user_id],  # 获取用户 ID
-                outputs=[ self.github_search_results, self.selected_github_repo]  # 使用 get 方法获取组件值
+                inputs=[self.github_query, self.user_id],  # 获取用户 ID
+                outputs=[self.github_search_results, self.selected_github_repo]  # 使用 get 方法获取组件值
             )
 
             # 处理 GitHub 仓库按钮点击事件
             process_github_repo_btn.click(
                 fn=gr_funcs.process_github_repo,
-                inputs=[ self.selected_github_repo,
-                         self.user_id],  # 获取用户 ID
-                outputs=[ self.repo_summary]  # 使用 get 方法获取组件值
+                inputs=[self.selected_github_repo, self.user_id],  # 获取用户 ID
+                outputs=[self.repo_summary]  # 使用 get 方法获取组件值
             )
 
             # 资源搜索按钮点击事件
             resource_search_btn.click(
                 fn=gr_funcs.search_resource,
-                inputs=[ self.resource_query],
-                outputs=[ self.resource_search_results, self.selected_resource]  # 使用 get 方法获取组件值
+                inputs=[self.resource_query],
+                outputs=[self.resource_search_results, self.selected_resource]  # 使用 get 方法获取组件值
             )
 
             # 处理资源按钮点击事件
             process_resource_btn.click(
                 fn=gr_funcs.process_resource,
-                inputs=[ self.selected_resource],
-                outputs=[ self.resource_summary]  # 使用 get 方法获取组件值
+                inputs=[self.selected_resource],
+                outputs=[self.resource_summary]  # 使用 get 方法获取组件值
             )
 
             # 新增下载资源按钮点击事件
-            download_resource_btn.click(
+            self.download_resource_btn.click(
                 fn=download_resource,
-                inputs=[self.selected_resource, self.user_id, gr.File(
-                    label="选择下载路径")],  # 添加用户选择的路径
+                inputs=[self.selected_resource, self.user_id, gr.File(label="选择下载路径")],  # 添加用户选择的路径
                 outputs=gr.Textbox()  # 或者其他合适的输出组件
             )
 
             # 选择路径按钮点击事件
-            select_paths_btn.click(
+            self.select_paths_btn.click(
                 fn=select_paths_handler,
-                inputs=[self.user_id, project_path, paper_path],
+                inputs=[self.user_id, self.project_path, self.paper_path],
                 outputs=gr.Textbox()
             )
 
             # 添加事件处理程序，用于选择云库中的项目路径并进行分析
-            project_path.change(
-                fn=lambda user_id, project_path: select_paths_handler(
-                    user_id, project_path, None),
-                inputs=[self.user_id, project_path],
+            self.project_path.change(
+                fn=lambda user_id, project_path: select_paths_handler(user_id, project_path, None),
+                inputs=[self.user_id, self.project_path],
                 outputs=gr.Textbox()
             )
 
             # 添加事件处理程序，用于选择云库中的论文路径并进行分析
-            paper_path.change(
-                fn=lambda user_id, paper_path: select_paths_handler(
-                    user_id, None, paper_path),
-                inputs=[self.user_id, paper_path],
+            self.paper_path.change(
+                fn=lambda user_id, paper_path: select_paths_handler(user_id, None, paper_path),
+                inputs=[self.user_id, self.paper_path],
                 outputs=gr.Textbox()
             )
 
             # 新增新建对话按钮点击事件
-            new_conversation_btn.click(
+            self.new_conversation_btn.click(
                 fn=lambda: create_new_conversation(self.user_id),
                 inputs=[],
                 outputs=[self.conversation_list, self.conversation_history]
