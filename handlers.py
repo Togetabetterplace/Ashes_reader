@@ -24,31 +24,31 @@ def bind_event_handlers(demo, llm, model_selector, dir_submit_btn, prj_fe, prj_c
                         search_btn, process_paper_btn, github_search_btn, process_github_repo_btn, resource_search_btn, process_resource_btn,
                         project_path, paper_path, select_paths_btn, download_resource_btn, new_conversation_btn, conversation_list, conversation_history):
     # 获取组件
-    model_selector = demo.get_component("model_selector")  # 根据实际组件名称修改
-    dir_submit_btn = demo.get_component("dir_submit_btn")  # 根据实际组件名称修改
-    prj_fe = demo.get_component("prj_fe")  # 根据实际组件名称修改
-    prj_chat_btn = demo.get_component("prj_chat_btn")  # 根据实际组件名称修改
-    code_cmt_btn = demo.get_component("code_cmt_btn")  # 根据实际组件名称修改
-    code_lang_ch_btn = demo.get_component("code_lang_ch_btn")  # 根据实际组件名称修改
-    search_btn = demo.get_component("search_btn")  # 根据实际组件名称修改
-    process_paper_btn = demo.get_component("process_paper_btn")  # 根据实际组件名称修改
-    github_search_btn = demo.get_component("github_search_btn")  # 根据实际组件名称修改
+    model_selector = demo.get_component("model_selector")
+    dir_submit_btn = demo.get_component("dir_submit_btn")
+    prj_fe = demo.get_component("prj_fe")
+    prj_chat_btn = demo.get_component("prj_chat_btn")
+    code_cmt_btn = demo.get_component("code_cmt_btn")
+    code_lang_ch_btn = demo.get_component("code_lang_ch_btn")
+    search_btn = demo.get_component("search_btn")
+    process_paper_btn = demo.get_component("process_paper_btn")
+    github_search_btn = demo.get_component("github_search_btn")
     process_github_repo_btn = demo.get_component(
-        "process_github_repo_btn")  # 根据实际组件名称修改
+        "process_github_repo_btn")
     resource_search_btn = demo.get_component(
-        "resource_search_btn")  # 根据实际组件名称修改
+        "resource_search_btn")
     process_resource_btn = demo.get_component(
-        "process_resource_btn")  # 根据实际组件名称修改
-    project_path = demo.get_component("project_path")  # 根据实际组件名称修改
-    paper_path = demo.get_component("paper_path")  # 根据实际组件名称修改
-    select_paths_btn = demo.get_component("select_paths_btn")  # 根据实际组件名称修改
+        "process_resource_btn")
+    project_path = demo.get_component("project_path")
+    paper_path = demo.get_component("paper_path")
+    select_paths_btn = demo.get_component("select_paths_btn")
     download_resource_btn = demo.get_component(
-        "download_resource_btn")  # 根据实际组件名称修改
+        "download_resource_btn")
     new_conversation_btn = demo.get_component(
-        "new_conversation_btn")  # 根据实际组件名称修改
-    conversation_list = demo.get_component("conversation_list")  # 根据实际组件名称修改
+        "new_conversation_btn")
+    conversation_list = demo.get_component("conversation_list")
     conversation_history = demo.get_component(
-        "conversation_history")  # 根据实际组件名称修改
+        "conversation_history")
 
     # 绑定事件处理器
     model_selector.select(
