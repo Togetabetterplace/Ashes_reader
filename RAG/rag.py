@@ -5,12 +5,12 @@ import os
 import json
 import jieba
 import torch
-from bm25 import BM25Model
+from RAG.bm25 import BM25Model
 from langchain_community.vectorstores import FAISS
-from embeddings import PEmbedding
+from RAG.embeddings import PEmbedding
 from modelscope import snapshot_download
 from transformers import AutoModelForSequenceClassification, AutoTokenizer, AutoModel
-from pdfparser import extract_page_text
+from RAG.pdfparser import extract_page_text
 import faiss
 import os
 import jieba

@@ -1,5 +1,5 @@
 import jieba
-from rank_bm25 import BM25Okapi
+from RAG.rank_bm25 import BM25Okapi
 # from langchain.vectorstores import FAISS
 
 
