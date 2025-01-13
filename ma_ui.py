@@ -266,7 +266,7 @@ class UIManager:
             dir_submit_btn.click(
                 gr_funcs.analyse_project,
                 inputs=[self.prj_name_tb],  # 使用 get 方法获取组件值
-                outputs=[self.label]  # 使用 get 方法获取组件值
+                outputs=[label]  # 使用 get 方法获取组件值
             )
             prj_fe.change(
                 gr_funcs.view_prj_file,
